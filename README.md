@@ -12,7 +12,8 @@ A small GNSS-disciplined 10 MHz frequency reference and precision time server fo
 
 HamREF provides two things a well-equipped station needs and usually has to buy separately:
 
-- A **10 MHz reference output** (or any other, programmable) (SMA, 50 Ω) to lock transceivers, synthesizers, and test equipment.
+- A **10 MHz reference output** (or any other, programmable) (BNC, 50 Ω) to lock transceivers, synthesizers, and test equipment.
+- A **1 PPS timing output** which can be used to lock and synck devices to the world-standard one pulse per second.
 - A **precision time source for the shack computer**, disciplined by GNSS, accurate enough for FT8 and other digital modes.
 
 Status (GNSS lock, satellite count, PPS accuracy, OCXO discipline state) is shown on a small monochrome OLED plus two multicolor status LEDs (GPSDO / NTP) on the front panel — color and blink/steady pattern indicate different states. A front-panel rotary encoder drives the menu; full parameter configuration is also available over USB (see [Enclosure](#enclosure) below).
