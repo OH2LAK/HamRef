@@ -4,7 +4,9 @@ A small GNSS-disciplined 10 MHz frequency reference and precision time server fo
 
 > **Status: early architecture / pre-prototype.** No firmware or PCB yet. This README documents the design as currently planned so the repo has a real starting point; sections below are marked `TODO` where work hasn't started.
 
-<img width="600" alt="HamREF mockup" src="https://github.com/user-attachments/assets/82779c23-fe5e-4b1a-90e0-4775c3bd64c9" />
+<p align="center">
+  <img width="600" alt="HamREF mockup" src="https://github.com/user-attachments/assets/82779c23-fe5e-4b1a-90e0-4775c3bd64c9" />
+</p>
 
 ## What this is
 
@@ -13,7 +15,7 @@ HamREF provides two things a well-equipped station needs and usually has to buy 
 - A **10 MHz reference output** (or any other, programmable) (SMA, 50 Ω) to lock transceivers, synthesizers, and test equipment.
 - A **precision time source for the shack computer**, disciplined by GNSS, accurate enough for FT8 and other digital modes.
 
-Status (GNSS lock, satellite count, PPS accuracy, OCXO discipline state) is shown on a small monochrome OLED plus a row of status LEDs (PWR / GNSS / 10 MHz / HOLD) on the front panel. All parameter configuration happens over USB — the enclosure is too shallow for a front-panel encoder or buttons (see [Enclosure](#enclosure) below).
+Status (GNSS lock, satellite count, PPS accuracy, OCXO discipline state) is shown on a small monochrome OLED plus two multicolor status LEDs (GPSDO / NTP) on the front panel — color and blink/steady pattern indicate different states. A front-panel rotary encoder drives the menu; full parameter configuration is also available over USB (see [Enclosure](#enclosure) below).
 
 ## Why not just use the GNSS module's own 10 MHz output?
 
@@ -27,12 +29,12 @@ Full rationale and the architecture decision log: [`docs/architecture-and-plan.m
 
 **Fischer Elektronik AKG 105.26** (part AKG1052680ME) — an extruded aluminum mini case for 100 mm eurocards, 105 × 100.3 × 26 mm, natural anodized, with integrated cooling-fin channels. Front and rear panels are separate 2 mm cover plates.
 
-The 26 mm case height (≈22 mm usable panel height) ruled out the originally planned 240x240 color TFT and a front-panel rotary encoder — neither fits. That's why the display is a small OLED and the front panel is display + LEDs only:
+The 26 mm case height (≈22 mm usable panel height) ruled out the originally planned 240x240 color TFT. An EC11-class rotary encoder does fit, though (body ≈11.7×12–13×4.5–8.5 mm, ø7 mm panel bushing — verified against the Farnell EC11 datasheet), so the front panel keeps a physical control after all:
 
 | Panel | Contents |
 |---|---|
-| Front | 0.91" 128x32 OLED (status), 4 status LEDs (PWR / GNSS / 10 MHz / HOLD) |
-| Rear | SMA (antenna), SMA (10 MHz out), USB (power + host link) |
+| Front | 0.91" 128x32 OLED (status), 2 multicolor LEDs (GPSDO, NTP), rotary encoder (menu/control) |
+| Rear | SMA (GNSS antenna), BNC (1PPS OUT), BNC (REF OUT), USB-C (host + 5V power) |
 
 The 22 mm limit also constrains component height on the PCB (OCXO included) — still an open item, see the architecture doc.
 
@@ -41,21 +43,26 @@ The 22 mm limit also constrains component height on the PCB (OCXO included) — 
 ```
 Active GNSS antenna
         |
-    LEA-M8S  --UART (UBX/NMEA)--> ESP32-S3
+    LEA-M8S  --UART (UBX/NMEA)--> ESP32-S3 <-- encoder (menu/control)
         |TIMEPULSE (1PPS)                |
-        v                                |--I2C --> 0.91" 128x32 OLED + status LEDs
-   (fan out / buffer)                    |--I2C --> DAC --EFC--> OCXO (10 MHz, 5V)
-        |                                |                             |
+        v                                |--I2C --> 0.91" 128x32 OLED
+   (fan out / buffer)                    |--GPIO --> RGB LED "GPSDO"
+        |                                |--GPIO --> RGB LED "NTP"
+        |                                |--I2C --> DAC --EFC--> OCXO (10 MHz, 5V)
+        |                                                              |
         +--------------------------------+                             |
                                           |<--freq. measurement---------+
                                           |
-                                    USB (native, ESP32-S3):
-                                    - powers the whole device
+                                    USB-C (native, ESP32-S3):
+                                    - powers the whole device (5V, host link)
                                     - CDC-ACM: PPS/NMEA data -> host helper -> chrony SHM/PPS
-                                    - also carries parameter configuration (no front-panel controls)
+                                    - also carries parameter configuration
                                           |
-                              10 MHz out <-- buffer/distribution amp <-- OCXO
-                              (SMA, 50 ohm, rear panel)
+                              1PPS OUT <-- buffer <-- LEA-M8S TIMEPULSE
+                              (BNC, rear panel)
+
+                              REF OUT <-- buffer/distribution amp <-- OCXO
+                              (BNC, 50 ohm, rear panel)
 ```
 
 Key hardware decisions so far:
@@ -68,9 +75,9 @@ Key hardware decisions so far:
 | Oscillator | 5 V OCXO, analog EFC | e.g. Trimble 65256 / IsoTemp 143-141 / CTI OC5SVC25 / Bliley NV47M1008 class part — physical height inside the 22 mm case is still open, see architecture doc. |
 | Enclosure | Fischer Elektronik AKG 105.26 (AKG1052680ME) | 105 × 100.3 × 26 mm extruded aluminum, 100 mm eurocard. |
 | Display | 0.91" 128x32 mono OLED, I2C | SSD1306-class, ~36×12.5 mm PCB — fits the 22 mm panel height with margin; 0.96" 128x64 modules do not. |
-| Front panel | OLED + 4 status LEDs | No encoder/buttons — doesn't fit the case height. |
-| Rear panel | SMA (ANT), SMA (10 MHz out), USB | All connectors on the back. |
-| Power + host link | USB | Powers the device; CDC-ACM carries PPS/NMEA to a host-side helper feeding chrony (SHM/PPS refclock), and doubles as the configuration interface. |
+| Front panel | OLED + 2 multicolor LEDs (GPSDO, NTP) + rotary encoder | EC11-class encoder confirmed to fit the 22 mm panel height. LED color/blink pattern encodes state (firmware TBD). |
+| Rear panel | SMA (GNSS antenna), BNC (1PPS OUT), BNC (REF OUT), USB-C (host + 5V power) | All connectors on the back; layout across the 105 mm width still to be confirmed at PCB stage. |
+| Power + host link | USB-C | Powers the device (5V); CDC-ACM carries PPS/NMEA to a host-side helper feeding chrony (SHM/PPS refclock), and doubles as the configuration interface alongside the encoder/OLED menu. |
 
 See the architecture doc for the full reasoning, open questions, and the phased project plan.
 
