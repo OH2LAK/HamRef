@@ -90,6 +90,7 @@ Design decisions are based on:
 
 `TODO` — pick a license (e.g. MIT/CERN-OHL-S for hardware, MIT/GPL for firmware) before the first public commit.
 
-## Author
+## Authors
 
-Erik, OH2LAK / OH2CH
+Erik, OH2LAK
+Others will be too, when I find them and convince them this is a good project :)
