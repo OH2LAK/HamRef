@@ -44,7 +44,7 @@ The 22 mm limit also constrains component height on the PCB (OCXO included) — 
 ```
 Active GNSS antenna
         |
-    LEA-M8S  --UART (UBX/NMEA)--> RP2350 (Pico 2) <-- encoder (menu/control)
+    LEA-M8S  --UART (UBX/NMEA)--> RP2350-Plus (RP2350A) <-- encoder (menu/control)
         |TIMEPULSE (1PPS)                |
         v                                |--I2C --> 0.91" 128x32 OLED
    (fan out / buffer)                    |--GPIO --> RGB LED "GPSDO"
@@ -72,7 +72,7 @@ Key hardware decisions so far:
 |---|---|---|
 | GNSS module | u-blox LEA-M8S | Fixed — parts already on hand. Footprint and pinout are shared with LEA-M8T. |
 | Antenna | Active, external | Antenna supervisor + R_BIAS per u-blox HIM. |
-| MCU | RP2350A on a ready-made Raspberry Pi Pico 2 board | Ready-made board keeps HamREF easy to build as a kit. PIO blocks give deterministic 10 MHz counting and 1PPS timestamping without WiFi interrupt jitter; native USB (TinyUSB); UF2 firmware updates. No WiFi in v1 (Pico 2 W is an option later). |
+| MCU | RP2350A on a ready-made Raspberry Pi Pico 2 board | Ready-made board keeps HamREF easy to build as a kit. PIO blocks give deterministic 10 MHz counting and 1PPS timestamping without WiFi interrupt jitter; native USB (TinyUSB); UF2 firmware updates. No WiFi in v1. Raspberry Pi Pico 2 (micro-USB) remains a fallback. |
 | Oscillator | 5 V OCXO, analog EFC | e.g. Trimble 65256 / IsoTemp 143-141 / CTI OC5SVC25 / Bliley NV47M1008 class part — physical height inside the 22 mm case is still open, see architecture doc. |
 | Enclosure | Fischer Elektronik AKG 105.26 (AKG1052680ME) | 105 × 100.3 × 26 mm extruded aluminum, 100 mm eurocard. |
 | Display | 0.91" 128x32 mono OLED, I2C | SSD1306-class, 38 × 12 mm PCB (active area 22.4 × 5.6 mm) — fits the 22 mm panel height with margin; 0.96" 128x64 modules do not. |
@@ -115,6 +115,7 @@ Design decisions are based on:
 - u-blox LEA-M8S Data Sheet (UBX-16010205)
 - u-blox LEA-M8S/M8T Hardware Integration Manual (UBX-15030060)
 - Fischer Elektronik AKG1052680ME data sheet (enclosure)
+- Raspberry Pi RP2350 datasheet and Waveshare RP2350-Plus schematic / STEP model (`docs/datasheets/`)
 
 ## License
 

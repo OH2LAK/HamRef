@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.7)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.8)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -21,7 +21,7 @@ LEA-M8S:ssä (Data sheet UBX-16010205 R05, HIM UBX-15030060 R07) on vain yksi ko
 - Vaihe: **prototyyppi omaan käyttöön ensin**.
 - Kotelo: **Fischer Elektronik AKG 105.26 (tuote AKG1052680ME)** — ekstrudoitu alumiininen minikotelo, 105 × 100,3 × 26 mm, luonnonanodisoitu, integroidut jäähdytysripa-urat, 100 mm:n eurokortille. Ks. "Kotelo ja käyttöliittymä" alla.
 - Näyttö: **~~pieni väri-TFT, SPI, 240x240~~ → 0.91" 128x32 mono-OLED, I2C, SSD1306-luokkaa** — lukittu valinta, ks. "Näyttövalinta" alla.
-- MCU: **~~ESP32-S3~~ → RP2350A, toteutuksena valmis Raspberry Pi Pico 2 -kehityskortti** — lukittu 2026-10-14. Koska HamREF:stä halutaan **rakennussarjamainen** (helppo koota itse), käytetään valmista Pico 2 -korttia eikä omaa RP2350-piiriä/flashia/kidettä omalla PCB:llä. Perusteet: PIO-lohkot antavat deterministisen 10 MHz -laskennan ja 1PPS-aikaleimauksen ilman WiFi-häiriötä, natiivi USB (TinyUSB), UF2-päivitys. WiFi ei ole v1:ssä tarpeen, koska USB hoitaa kellopalvelun. Ks. "MCU-valinta" alla.
+- MCU: **~~ESP32-S3~~ → RP2350A, toteutuksena valmis Pico-muotoinen RP2350A-kortti (ensisijaisesti Waveshare RP2350-Plus, USB-C)** — MCU lukittu 2026-10-14, kortin valinta päivitetty 2026-10-14 (ks. "USB-C-kortin valinta"). Koska HamREF:stä halutaan **rakennussarjamainen** (helppo koota itse), käytetään valmista Pico 2 -korttia eikä omaa RP2350-piiriä/flashia/kidettä omalla PCB:llä. Perusteet: PIO-lohkot antavat deterministisen 10 MHz -laskennan ja 1PPS-aikaleimauksen ilman WiFi-häiriötä, natiivi USB (TinyUSB), UF2-päivitys. WiFi ei ole v1:ssä tarpeen, koska USB hoitaa kellopalvelun. Ks. "MCU-valinta" alla.
 - **Käyttöteho ja kellopalvelu: USB** (ks. alla) — sekä virta että data yhdestä USB-liitännästä.
 
 ## Kotelo ja käyttöliittymä (päivitetty valitun kotelon mukaan)
@@ -132,6 +132,25 @@ Huomioitavaa (virhelista, appendix D):
 
 Myöhempi optimointi (ei v1:een): OCXO:n 10 MHz voidaan syöttää XIN:iin (XOSC pass-through, max 50 MHz), jolloin PLL tuottaa clk_sys:n (esim. 150 MHz = 15 × 10 MHz) lukittuna OCXO:hon ja 10 MHz:n laskenta muuttuu triviaaliksi (clk_sys-jaksot 1PPS-reunojen välillä). Haitat: bootrom/USB-boot olettaa oletuksena 12 MHz:n kiteen (muu taajuus vaatii peruuttamattoman OTP-asetuksen), eikä MCU:lla ole kelloa ennen OCXO:n käynnistymistä; vaatisi myös oman RP2350-piirin. Siksi v1:ssä pidetään kortin 12 MHz:n kide ja lasketaan 10 MHz PIO:lla.
 
+## USB-C-kortin valinta: Waveshare RP2350-Plus (ensisijainen) — 2026-10-14
+
+Virallinen Pico 2 käyttää micro-USB:tä, mutta takapaneeliin halutaan USB-C. Vertailtiin kolmea USB-C-korttia (lähteet: Waveshare-wikit, schematic ja STEP-malli kansiossa `docs/datasheets/Waveshare_RP2350-Plus/`):
+
+| Kortti | GPIO padeilla | Tulos |
+|---|---|---|
+| DFRobot Beetle RP2350 | 11 | Hylätty: ei riitä (tarve 14–19). |
+| Waveshare RP2350-Zero Mini | 20 reunalla + 9 juotospisteissä | Varavaihtoehto: komponentteja molemmilla puolilla, joten ei juotettavissa suoraan emolevyyn ilman nastalistaa. |
+| **Waveshare RP2350-Plus** | 26 (GP0–GP22, GP26–GP28) | **Ensisijainen**: Pico 2 -yhteensopiva pinout, USB-C, castellated-reunat, alapuoli tyhjä. |
+
+**RP2350-Plus (schematic RP2350_Plus.pdf, STEP RP2350_Plus_STEP.zip):**
+- RP2350A, 12 MHz kide, flash 4 MB (W25Q32JVSSIQ) tai 16 MB (W25Q128JVSIQ); 4 MB riittää. Mallit: RP2350-Plus (ei nastalistoja) ja RP2350-Plus-M (valmiiksi juotetut nastalistat). Hinta noin 6–7 $.
+- **Mitat (STEP):** PCB 21,0 × 51,0 mm (Pico-koko). USB-C-liitin työntyy PCB:n reunan yli noin 1,3 mm (kokonaispituus 52,3 mm); liittimen korkeus +3,25 mm ylä- ja 0,91 mm alapuolella. Muut komponentit vain yläpuolella, korkeintaan 2,5 mm (BOOT/RESET-painikkeet). Alapuolella ei ole muuta kuin USB-C-liitin, joten kortin voi juottaa castellated-reunoista suoraan emolevyyn.
+- **Padit (Pico-nastajärjestys, 40 pinniä):** GPIO0–GPIO22 ja GPIO26–GPIO28 padeilla; pad 30 RUN, pad 35 ADC_VREF, pad 36 3V3, pad 37 3V3_EN (PWR_EN), pad 39 VSYS, pad 40 VBUS. GPIO23–25 ja GPIO29 eivät ole padeilla: GPIO25 = käyttäjä-LED (tavallinen LED, ei WS2812), GPIO24 = VBUS-tunnistus (jakaja 51k/100k), GPIO29 = VSYS-mittaus (ADC-jakaja), GPIO23 = regulaattorin MODE/SYNC.
+- **Virtapolku:** VBUS-pad on suoraan USB-C:n VBUS (ei sulaketta kortilla). Diodi D1 (MBR230LSFT1G) on VBUS:n ja VSYS:n välissä; MP28164 buck-boost (max 2 A) saa tulonsa VSYS:stä ja tuottaa 3V3:n. Akkulaturi ETA6096 (tulo VBUS, akkuliitin PH1.25-2P, D2 VBAT→VSYS) on kortilla mutta käyttämätön. OCXO:n 5 V voidaan siten ottaa VBUS-padista ilman kortin diodin pudotusta, mutta sulake/suoja pitää tehdä emolevylle.
+- **Huomioita:** USB-datalinjoissa 27 Ω sarjavastukset (R16/R17) kuten Pico 2:ssa. Käyttämätön laturi ja akkuliitin eivät saa olla kytkettynä; laturin lepovirta mitataan ensimmäisellä kortilla.
+
+**Päätös:** suunnitellaan emolevy RP2350-Plus-korttia varten (juotettuna castellated-reunoista tai pistokelistoilla). Pico 2 (micro-USB) ja Zero Mini jäävät varavaihtoehdoiksi.
+
 ## Alustava lohkokaavio (tekstinä)
 ```
 Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
@@ -182,8 +201,8 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 - Tarkka OCXO-osavalinta ja hankintakanava (surplus eBay vs. uusi vastaava) — hinta/saatavuus/koko selvitettävä ennen tilausta.
 - USB-virransyötön mitoitus: mitataan OCXO:n todellinen lämmitysvirtapiikki ja päätetään puskurointi + tarvittava USB-lähteen virrankesto (itsevoimainen hubi / USB-C PD).
 - USB-kellopalvelun toteutustapa v1:ssä: CDC-ACM+host-apuohjelma (nopein) vs. virtuaalinen DCD-PPS vs. USB-Ethernet+oma NTP (valitaan Vaiheessa 6, ei blokkaa PCB-suunnittelua).
-- **USB-C takapaneelissa vs. Pico 2:n micro-USB**: viralliseen Pico 2:een USB tulee micro-USB-liittimestä, mutta takapaneeliin halutaan USB-C. Vaihtoehdot: (a) panel-mount micro-USB→USB-C -jatkokaapeli/adapteri, (b) USB-C-liitin pääkortille ja D+/D−/VBUS johdotettuna Pico 2:n koetuspisteisiin/VBUS-nastaan (varmistettava), (c) Pico 2 -yhteensopiva RP2350A-kortti, jossa on USB-C ja samanlainen nastajärjestys (kolmannen osapuolen kortit; varmistettava ennen valintaa). Päätettävä ennen PCB-ääriviivaa.
-- GPIO-budjetti Pico 2:lla: 26 käytettävää GPIO:ta; arvio tarpeesta noin 17–19 (UART 2, I2C 2, enkooderi 3, 2× RGB-ledi 4–6, 1PPS-tulo, 10 MHz -tulo, GNSS RESET/EXTINT) — riittää, mutta ei runsaasti.
+- **USB-C takapaneelissa**: ratkaistu valitsemalla USB-C-korttina Waveshare RP2350-Plus (ks. "USB-C-kortin valinta"). Avoimet tarkistukset: liittimen sijainti ja korkeus takapaneelin aukkoon nähden (liitin työntyy 1,3 mm PCB:n yli, korkeus 3,25 mm), kortin kokonaiskorkeus (alle 22 mm kun juotettuna emolevyyn), 5 V -polun suojaus (ei sulaketta kortilla), laturin lepovirta ilman akkua sekä 4 MB vs. 16 MB flash.
+- GPIO-budjetti (Pico 2 ja RP2350-Plus: 26 käytettävää GPIO:ta padeilla): arvio tarpeesta noin 17–19 (UART 2, I2C 2, enkooderi 3, 2× RGB-ledi 4–6, 1PPS-tulo, 10 MHz -tulo, GNSS RESET/EXTINT) — riittää, mutta ei runsaasti.
 - PIO-pohjaisen 10 MHz -taajuuslaskennan ja 1PPS-aikaleimauksen toteutus RP2350:llä — validoidaan proof-of-conceptissa (Vaihe 2).
 - NTP-palvelin verkkoon (WiFi/Ethernet) ei kuulu v1:een; jos tarvitaan myöhemmin, vaihtoehdot ovat Pico 2 W tai USB-Ethernet (CDC-NCM).
 - **Tuotantonäytön valinta** (ks. "Tuotantonäyttö (avoin)") sekä OLED-moduulin (0.91" 128x32, ei kiinnitysreikiä prototyypissä) kiinnitystapa etupaneeliin (leikkaus 2 mm:n kansilevyyn — liimaus tai painokehys), enkooderin akselin pituus/holkin läpivienti ja tilaledien sijoittelu — tarkentuu PCB/mekaniikkasuunnittelussa.
