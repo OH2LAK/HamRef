@@ -72,7 +72,7 @@ Key hardware decisions so far:
 |---|---|---|
 | GNSS module | u-blox LEA-M8S | Fixed — parts already on hand. Footprint and pinout are shared with LEA-M8T. |
 | Antenna | Active, external | Antenna supervisor + R_BIAS per u-blox HIM. |
-| MCU | RP2350 (Raspberry Pi Pico 2) | PIO blocks give deterministic 10 MHz counting and 1PPS timestamping without WiFi interrupt jitter; native USB (TinyUSB); UF2 firmware updates. No WiFi in v1 (Pico 2 W is an option later). |
+| MCU | RP2350A on a ready-made Raspberry Pi Pico 2 board | Ready-made board keeps HamREF easy to build as a kit. PIO blocks give deterministic 10 MHz counting and 1PPS timestamping without WiFi interrupt jitter; native USB (TinyUSB); UF2 firmware updates. No WiFi in v1 (Pico 2 W is an option later). |
 | Oscillator | 5 V OCXO, analog EFC | e.g. Trimble 65256 / IsoTemp 143-141 / CTI OC5SVC25 / Bliley NV47M1008 class part — physical height inside the 22 mm case is still open, see architecture doc. |
 | Enclosure | Fischer Elektronik AKG 105.26 (AKG1052680ME) | 105 × 100.3 × 26 mm extruded aluminum, 100 mm eurocard. |
 | Display | 0.91" 128x32 mono OLED, I2C | SSD1306-class, ~36×12.5 mm PCB — fits the 22 mm panel height with margin; 0.96" 128x64 modules do not. |

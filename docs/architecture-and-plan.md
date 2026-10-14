@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.4)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.5)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -21,7 +21,7 @@ LEA-M8S:ssä (Data sheet UBX-16010205 R05, HIM UBX-15030060 R07) on vain yksi ko
 - Vaihe: **prototyyppi omaan käyttöön ensin**.
 - Kotelo: **Fischer Elektronik AKG 105.26 (tuote AKG1052680ME)** — ekstrudoitu alumiininen minikotelo, 105 × 100,3 × 26 mm, luonnonanodisoitu, integroidut jäähdytysripa-urat, 100 mm:n eurokortille. Ks. "Kotelo ja käyttöliittymä" alla.
 - Näyttö: **~~pieni väri-TFT, SPI, 240x240~~ → 0.91" 128x32 mono-OLED, I2C, SSD1306-luokkaa** — lukittu valinta, ks. "Näyttövalinta" alla.
-- MCU: **~~ESP32-S3~~ → RP2350 (Raspberry Pi Pico 2)** — lukittu 2026-10-14, ks. "MCU-valinta" alla. Perusteet: PIO-lohkot antavat deterministisen 10 MHz -laskennan ja 1PPS-aikaleimauksen ilman WiFi-häiriötä, natiivi USB (TinyUSB), UF2-päivitys. WiFi ei ole v1:ssä tarpeen, koska USB hoitaa kellopalvelun.
+- MCU: **~~ESP32-S3~~ → RP2350A, toteutuksena valmis Raspberry Pi Pico 2 -kehityskortti** — lukittu 2026-10-14. Koska HamREF:stä halutaan **rakennussarjamainen** (helppo koota itse), käytetään valmista Pico 2 -korttia eikä omaa RP2350-piiriä/flashia/kidettä omalla PCB:llä. Perusteet: PIO-lohkot antavat deterministisen 10 MHz -laskennan ja 1PPS-aikaleimauksen ilman WiFi-häiriötä, natiivi USB (TinyUSB), UF2-päivitys. WiFi ei ole v1:ssä tarpeen, koska USB hoitaa kellopalvelun. Ks. "MCU-valinta" alla.
 - **Käyttöteho ja kellopalvelu: USB** (ks. alla) — sekä virta että data yhdestä USB-liitännästä.
 
 ## Kotelo ja käyttöliittymä (päivitetty valitun kotelon mukaan)
@@ -89,7 +89,7 @@ Vertailtiin ESP32-S3:a, klassista Arduinoa (ATmega328), RP2350:tä ja STM32:ta. 
 - **Natiivi USB (TinyUSB)**: CDC-ACM, myöhemmin virtuaalinen DCD tai CDC-NCM. Riittää virtaan + kellopalveluun + konfigurointiin.
 - **UF2-bootloader (BOOTSEL)**: firmwarepäivitys vetämällä tiedosto asemalle.
 - **Toolchain**: Pico SDK (C/C++) aikakriittisiin osiin, tai Arduino-Pico-core (Arduino IDE / PlatformIO) nopeaan prototypointiin.
-- **Mekaniikka**: Pico 2 -moduuli n. 51 × 21 mm, mahtuu 22 mm:n sisäkorkeuteen. Voidaan juottaa suoraan eurokortille (reunapadit) tai myöhemmin korvata RP2350-piirillä + flash + kide omassa KiCad-layoutissa.
+- **Mekaniikka ja kokoonpano**: Pico 2 -kortti on n. 51 × 21 mm, 40 nastaa (26 käytettävää GPIO:ta; GP23–25 ja GP29 on varattu kortin sisäiseen käyttöön). Kortti kiinnitetään HamREF-pääkortille joko pistokelistoilla (helpoin rakennussarjassa, vaihdettavissa) tai juottamalla reunapadeilla (matalampi). Pico 2:n korkeus + pistoke on laskettava mukaan 22 mm:n sisäkorkeuteen. Oma RP2350-piiri (Minimal KiCad -referenssi, `docs/datasheets/RPi_Pico_2/`) **ei ole suunnitelmissa** — jätetty mahdolliseksi myöhemmäksi jatkokehitykseksi.
 
 **Mitä menetetään ESP32-S3:een verrattuna:**
 - Ei WiFiä (Pico 2 W:ssä olisi, jos tarvitaan myöhemmin). Ei WiFi-NTP:tä eikä web-UI:ta v1:ssä — korvataan USB-yhteydellä ja enkooderi+OLED-valikolla.
@@ -98,6 +98,21 @@ Vertailtiin ESP32-S3:a, klassista Arduinoa (ATmega328), RP2350:tä ja STM32:ta. 
 **Yhteiset ratkaisut (ei muutu):** DAC on edelleen ulkoinen I2C-DAC (MCP4725 tms.) EFC-ohjaukseen; OLED I2C:llä; u-blox UART:lla; 10 MHz kannattaa puskuroida/jakaa ennen MCU:ta signaalitasojen ja laskentataajuuden hallitsemiseksi. Vaihtoehtona myöhemmin STM32 (hyvä timer-capture), ei tarpeen v1:ssä.
 
 **Avoin:** PIO-pohjaisen taajuuslaskennan ja 1PPS-aikaleimauksen toteutus (laskurin laajennus 32 bittiin, PPS-latchi) validoidaan proof-of-conceptissa.
+
+### Datalehtitarkistus (RP2350 datasheet RP-008373, Hardware design RP-008280) — 2026-10-14
+Vahvistettu:
+- USB 1.1 -kontrolleri ja PHY (Full Speed -laite), sisäiset pull-upit, ulkoisena vain 27 Ω sarjavastus D+/D−. Riittää CDC-ACM:lle ja myöhemmin CDC-NCM:lle.
+- PIO:n tulossa 2 flipflopin synkronoija (+2 jaksoa viivettä, ohitettavissa nastakohtaisesti). 150 MHz:n clk_sys:llä aikaleimaus/laskenta n. 6,7 ns resoluutiolla; 10 MHz tulee samplatuksi n. 15-kertaisella nopeudella.
+- PWM-laskuri tukee B-nastan reunalaskentaa (taajuusmittaus), mutta laskuri on 16-bittinen (ylivuoto 10 MHz:llä n. 6,5 ms) → **PIO (32-bit) on suositeltu tapa**.
+- GPIO:t ovat **5 V-sietoisia** (kun siru on käynnissä) → 5 V:n OCXO:n neliöaalto voi mennä tuloon suoraan; puskuri on silti suositeltava reunojen siistimiseen.
+- RP2350A: QFN-60, 30 GPIO:ta; Pico 2 käyttää A-versiota.
+
+Huomioitavaa (virhelista, appendix D):
+- **RP2350-E9 (A2-silikoni):** Bank 0 GPIO:n tulolla vuotovirta (~120 µA) jännitealueella VIL…VIH; sisäinen pull-down ei voita sitä (vaatii ≤8,2 kΩ ulkoisen vedon). → **Älä käytä sisäisiä pull-downeja tuloissa**; pull-up toimii. Tarkista Pico 2:n silikoniversio.
+- **RP2350-E12 (A2–A4, lievennetty A3:ssa):** USB-tilasignaalien synkronointi puutteellinen, jos clk_sys ≤ clk_usb (48 MHz) → pidä clk_sys selvästi yli 48 MHz (esim. 150 MHz).
+- **RP2350-E16:** USB_OTP_VDD:n häiriö voi korruptoida OTP-luvun → pidä syöttö siistinä (koskee omaa piirilevyä, ei valmista Pico 2 -korttia).
+
+Myöhempi optimointi (ei v1:een): OCXO:n 10 MHz voidaan syöttää XIN:iin (XOSC pass-through, max 50 MHz), jolloin PLL tuottaa clk_sys:n (esim. 150 MHz = 15 × 10 MHz) lukittuna OCXO:hon ja 10 MHz:n laskenta muuttuu triviaaliksi (clk_sys-jaksot 1PPS-reunojen välillä). Haitat: bootrom/USB-boot olettaa oletuksena 12 MHz:n kiteen (muu taajuus vaatii peruuttamattoman OTP-asetuksen), eikä MCU:lla ole kelloa ennen OCXO:n käynnistymistä; vaatisi myös oman RP2350-piirin. Siksi v1:ssä pidetään kortin 12 MHz:n kide ja lasketaan 10 MHz PIO:lla.
 
 ## Alustava lohkokaavio (tekstinä)
 ```
@@ -124,7 +139,7 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 ## Karkea BOM-kategorialista (tarkennetaan Vaiheessa 2)
 - LEA-M8S (varastossa)
 - Aktiivinen GNSS-antenni (ulkokäyttöön, esim. 3–5V bias)
-- MCU: **Raspberry Pi Pico 2 (RP2350)** -moduuli (natiivi USB); myöhemmin mahdollisesti RP2350-piiri suoraan omalle kortille
+- MCU: **Raspberry Pi Pico 2 (RP2350A) -kehityskortti** (natiivi USB), pistokelistoilla tai juotettuna; ei omaa RP2350-piiriä (rakennussarjaperiaate)
 - OCXO: 5V, analoginen EFC (esim. Trimble 65256 / IsoTemp 143-141 / CTI OC5SVC25 / Bliley NV47M1008 -tyyppinen, surplus tai vastaava uusi)
 - DAC: MCP4725 (I2C, 12-bit) + RC-silmukkasuodatin, OCXO:n EFC-ohjaukseen
 - 10 MHz (tms.) -puskuri/jakovahvistin, BNC-ulostulo, 50 Ω
@@ -138,7 +153,7 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 ## Vaiheistus (PM-tyyliin)
 1. **Vaatimukset ja arkkitehtuuri** — tämä dokumentti.
 2. **Proof-of-concept penkillä**: Pico 2 -kehityskortti, paljas LEA-M8S pienellä carrier-piirillä (tai u-blox EVK-M8), MCP4725-breakout, valittu OCXO, 0.91" OLED-breakout, USB-CDC+ntp-shm-tyylinen PC-apuohjelma. Tavoite: validoida PIO-pohjainen PPS-kaappaus ja taajuuslaskenta, disciplining-algoritmi, USB-kellopalvelu ja virransyötön riittävyys ennen omaa piirilevyä.
-3. **Kytkentäkaavio (KiCad)** — LEA-M8S HIM:n minimisuunnittelu + antennisupervisor aktiiviantennille, Pico 2 -moduuli (tai RP2350), DAC, OCXO, OLED+tilaledit+enkooderi, USB-C, liittimet. Piirilevyn ääriviiva AKG 105.26:n sisämittojen mukaan (100 mm eurokortti, komponenttikorkeus ≤22 mm).
+3. **Kytkentäkaavio (KiCad)** — LEA-M8S HIM:n minimisuunnittelu + antennisupervisor aktiiviantennille, Pico 2 -kortti, DAC, OCXO, OLED+tilaledit+enkooderi, USB-C, liittimet. Piirilevyn ääriviiva AKG 105.26:n sisämittojen mukaan (100 mm eurokortti, komponenttikorkeus ≤22 mm).
 4. **PCB-layout** — RF-osuudet (antenni, 10 MHz -ulostulo) 50 Ω kontrolloidulla impedanssilla, HIM:n EMI-suositukset I/O-linjoilla, OCXO pois lämpölähteiden läheltä (HIM 2.5), kaikki liittimet reunalle takapaneelin kohdalle.
 5. **Kotelo** — Fischer AKG1052680ME: etupaneeliin OLED-aukko, 2 tilaledin reiät ja enkooderin ø7 mm reikä; takapaneeliin SMA, 2× BNC ja USB-C -aukot.
 6. **Firmware** — UBX-parsinta, PIO-pohjainen PPS-kaappaus/taajuuslaskenta ja disciplining-silmukka, OLED-status-UI + enkooderivalikko, tilaledien ohjaus, USB-CDC-kellopalvelu ja -konfigurointi.
@@ -149,6 +164,8 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 - Tarkka OCXO-osavalinta ja hankintakanava (surplus eBay vs. uusi vastaava) — hinta/saatavuus/koko selvitettävä ennen tilausta.
 - USB-virransyötön mitoitus: mitataan OCXO:n todellinen lämmitysvirtapiikki ja päätetään puskurointi + tarvittava USB-lähteen virrankesto (itsevoimainen hubi / USB-C PD).
 - USB-kellopalvelun toteutustapa v1:ssä: CDC-ACM+host-apuohjelma (nopein) vs. virtuaalinen DCD-PPS vs. USB-Ethernet+oma NTP (valitaan Vaiheessa 6, ei blokkaa PCB-suunnittelua).
+- **USB-C takapaneelissa vs. Pico 2:n micro-USB**: viralliseen Pico 2:een USB tulee micro-USB-liittimestä, mutta takapaneeliin halutaan USB-C. Vaihtoehdot: (a) panel-mount micro-USB→USB-C -jatkokaapeli/adapteri, (b) USB-C-liitin pääkortille ja D+/D−/VBUS johdotettuna Pico 2:n koetuspisteisiin/VBUS-nastaan (varmistettava), (c) Pico 2 -yhteensopiva RP2350A-kortti, jossa on USB-C ja samanlainen nastajärjestys (kolmannen osapuolen kortit; varmistettava ennen valintaa). Päätettävä ennen PCB-ääriviivaa.
+- GPIO-budjetti Pico 2:lla: 26 käytettävää GPIO:ta; arvio tarpeesta noin 17–19 (UART 2, I2C 2, enkooderi 3, 2× RGB-ledi 4–6, 1PPS-tulo, 10 MHz -tulo, GNSS RESET/EXTINT) — riittää, mutta ei runsaasti.
 - PIO-pohjaisen 10 MHz -taajuuslaskennan ja 1PPS-aikaleimauksen toteutus RP2350:llä — validoidaan proof-of-conceptissa (Vaihe 2).
 - NTP-palvelin verkkoon (WiFi/Ethernet) ei kuulu v1:een; jos tarvitaan myöhemmin, vaihtoehdot ovat Pico 2 W tai USB-Ethernet (CDC-NCM).
 - OLED-moduulin (0.91" 128x32) tarkka kiinnitystapa etupaneeliin (leikkaus 2 mm:n kansilevyyn — liimaus, pienet ruuvit vai painokehys), enkooderin akselin pituus/holkin läpivienti ja tilaledien sijoittelu — tarkentuu PCB/mekaniikkasuunnittelussa.
