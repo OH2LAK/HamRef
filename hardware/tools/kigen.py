@@ -73,7 +73,7 @@ class Sheet:
         self.libids.add(libid)
         return libid
     def add(self, ref, lib, name, value, x, y, pins=None, footprint=None, fields=None,
-            dnp=False, unit=1, nc=(), mfr=None, mpn=None, note=None, rot=0):
+            dnp=False, unit=1, nc=(), mfr=None, mpn=None, note=None, rot=0, near=None):
         """pins: {pin_number(str): netname}. nc: pin numbers to mark no-connect."""
         libid = self._embed(lib, name)
         sym = get_symbol(lib, name)
@@ -110,7 +110,7 @@ class Sheet:
         ss.instances = [SymbolProjectInstance(name=self.gen.project,
             paths=[SymbolProjectPath(sheetInstancePath=self.instance_path, reference=ref, unit=unit)])]
         self.sch.schematicSymbols.append(ss)
-        self.parts.append(dict(ref=ref, lib=libid, value=value, fp=footprint, dnp=dnp, mpn=mpn, mfr=mfr, note=note,
+        self.parts.append(dict(ref=ref, lib=libid, value=value, fp=footprint, dnp=dnp, mpn=mpn, mfr=mfr, note=note, near=near,
                                sheet=self.name, pins=pins or {}))
         # labels
         pins = pins or {}

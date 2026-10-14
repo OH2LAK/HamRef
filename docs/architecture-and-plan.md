@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.15)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.16)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -318,7 +318,9 @@ KiCad 7 -projekti on kansiossa `hardware/proto-v0.1/` (hierarkia Power / GNSS / 
 
 Muutokset GPIO-jakoon: GP16 = OCXO_FLT (TPS2065C:n vikalippu). Spare: GP17–GP20 (J SPARE).
 
-Seuraavaksi: RP2350-Plus-jalanjälki STEP-mittojen mukaan, OCXO-jalanjälki kappaleesta mitaten, KiCadin ERC, sitten layout.
+**PCB v0.1 generoitu ja reititetty (2026-10-14):** `hardware/proto-v0.1/hamref_proto_v0_1.kicad_pcb`, 100 × 100 mm, 4 kerrosta, kaikki osat ylhäällä, In1 = GND-taso. RP2350-Plus-jalanjälki on varmennettu Waveshaaren mittapiirrosta ja Raspberry Pin Pico 2 -jalanjälkeä (MIT) vasten. Reititys Freerouting 1.9.0:lla (2.1.0 kaatuu), DRC (KiCad 7.0.11): 0 kytkemätöntä, 0 clearance-virhettä. Ks. `docs/hardware/proto-v0.1-schematic-plan.md`, osio "PCB v0.1 (layout)". Uudelleengenerointi: `hardware/tools/make_all.sh`.
+
+Seuraavaksi: OCXO-jalanjälki kappaleesta mitaten (nyt arvio, ks. suunnitelma), KiCadin oma ERC/DRC ja visuaalinen tarkistus Macilla, sijoittelun käsin viimeistely (RF, OCXO:n lämpö), sitten Gerberit.
 
 ## Alustava lohkokaavio (tekstinä)
 ```

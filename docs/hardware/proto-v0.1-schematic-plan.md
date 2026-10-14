@@ -78,7 +78,7 @@ CTI OSC5A2B02 (5V_OCXO), EFC: AD5693R (I2C1 0x4C, 5V_DAC) -> 2x (4.7k + 10uF) ->
 
 | Viite | Osa | Arvo | Jalanjälki | MPN | Pinnit → netit |
 |---|---|---|---|---|---|
-| X1 | OCXO_OSC5A2B02 | OSC5A2B02 | Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical | OSC5A2B02 | 1(OUT)→OCXO_OUT_RAW; 2(GND)→GND; 3(EFC)→EFC; 5(VCC)→5V_OCXO _used units often salvaged: test before fitting_ |
+| X1 | OCXO_OSC5A2B02 | OSC5A2B02 | HamREF:OCXO_OSC5A2B02_EST | OSC5A2B02 | 1(OUT)→OCXO_OUT_RAW; 2(GND)→GND; 3(EFC)→EFC; 5(VCC)→5V_OCXO _used units often salvaged: test before fitting_ |
 | U5 | AD5693RxRM | AD5693R | Package_SO:MSOP-10_3x3mm_P0.5mm | AD5693RBRMZ | 1(VDD)→5V_DAC; 2(VLOGIC)→3V3; 3(~{RESET})→3V3; 4(~{LDAC})→GND; 5(GND)→GND; 6(A0)→GND; 7(SCL)→I2C1_SCL; 8(SDA)→I2C1_SDA; 9(VREF)→DAC_VREF; 10(VOUT)→DAC_OUT _A0=GND -> 0x4C. Set gain x2 (0-5V), clamp code to ~4.0V in firmware._ |
 | C18 | C | 10nF | Capacitor_SMD:C_0402_1005Metric |  | 1→DAC_VREF; 2→GND |
 | C19 | C | 100nF | Capacitor_SMD:C_0402_1005Metric |  | 1→3V3; 2→GND |
@@ -153,7 +153,7 @@ RP2350-Plus (omat symboli ja jalanjälki), I2C0-pullupit, OLED-, enkooderi- ja L
 
 ## Avoimet kohdat (v0.1 → layout)
 
-1. **RP2350-Plus-jalanjälki** (`hamref.pretty`): padien geometria on otettu viralliselta Pico 2 -jalanjäljeltä (MIT, Raspberry Pi Ltd) ja varmistettu Waveshaaren mittapiirrosta vasten (21.00 × 51.00 mm, riviväli 17.78 mm, pitch 2.54 mm, pinni 1: 1.37 mm ylhäältä, 1.61 mm sivulta). Jäljellä: USB-C-pää ulkonee, tarvitaan reunasijoitus tai leikkaus; moduulin alapuoli on tasainen (BAT-liitin, BOOT/RESET ja komponentit ovat yläpuolella).
+1. **RP2350-Plus-jalanjälki** (`hamref.pretty`) on paikkamerkki (pad 3.8×1.6 mm, rivit 19.8 mm välein). Tarkista Waveshare STEP-/mittapiirroksesta ennen layoutia; USB-C-pää ulkonee, tarvitaan reunasijoitus tai leikkaus.
 2. **OCXO-jalanjälki**: OSC5A2B02:n pinnigeometriaa ei ole vahvistettu; paikkamerkkinä 1×5-header, pad N = OCXO-pinni N (datasheet bottom view). Mittaa kappaleesta.
 3. **Si5351C ilman kidettä**: CLKIN-käyttö ilman XTAL:ia pitää varmistaa Skyworksin AN619/datasheetistä ja oikealla piirillä; Y1 on DNP varalle (XA/XB-nettien kytkentä).
 4. **Si5351C EP-koko** (2.6×2.6 vs 2.7×2.7 mm) ja jalanjälki varmistettava valmistajan land patternista.
@@ -163,3 +163,23 @@ RP2350-Plus (omat symboli ja jalanjälki), I2C0-pullupit, OLED-, enkooderi- ja L
 8. **LP5907 EN** sidottu IN:iin (aina päällä). TPS2065C:ssä virtaraja on kiinteä (~1 A), ei R_ILIM:iä.
 9. **GP16 = OCXO_FLT** (TPS2065C:n FLT, avoin nielu, pullup 100k); spare-GPIO:t GP17–GP20 J SPARE -liittimessä.
 10. Polyfuse- ja diodi-MPN:t ovat ehdotuksia – tarkista saatavuus ennen tilausta.
+
+## PCB v0.1 (layout)
+
+Tiedosto: `hardware/proto-v0.1/hamref_proto_v0_1.kicad_pcb` (generoitu: `hardware/tools/build_pcb.py` + Freerouting 1.9.0).
+
+- 100 × 100 mm, 4 kerrosta: F.Cu (osat + signaalit), In1.Cu = yhtenäinen GND-taso, In2.Cu = signaali-/virtareititys, B.Cu = signaalit + GND-valu. Kaikki osat ylhäällä.
+- RP2350-Plus juotetaan castellated-padeilla oikeaan reunaan (USB-C ylöspäin). Moduulin rungon alla on kielletty-alue (ei johtoja/läpivientejä F.Cu:lla).
+- Takapaneelirivi ylhäällä: SMA (GNSS), BNC REF OUT, BNC 1PPS OUT, BNC AUX OUT. Käyttöliittymäpinnit (OLED, enkooderi, LED, reset, spare) ja testipisteet alareunassa.
+- LEA-M8S kierretty niin, että RF_IN (pinni 16) on lähimpänä SMA:ta; GNSS_RF on lukittu 0.37 mm:n johto F.Cu:lla In1-GND-tason päällä (50 ohm arvio, 0.21 mm prepreg – tarkista valmistajan pinoamasta).
+- Virtaverkot (5V_MAIN, 5V_OCXO, 3V3, 3V3_GNSS, 5V_DAC, VSYS, VBUS_MOD) reititetty 0.5 mm:llä, muut 0.2 mm; clearance 0.2 mm, läpivienti 0.6/0.3 mm.
+- Jokaisella SMD-GND-padilla on oma läpivienti In1-maatasolle; Si5351C:n EP:ssä 4 lämpö-/maaläpivientiä.
+- DRC (KiCad 7.0.11, `WriteDRCReport`): 0 kytkemätöntä, 0 clearance-virhettä. Jäljellä vain silkkiin liittyviä huomautuksia (silk overlap / edge) ja `lib_footprint_issues` (projektin omat jalanjäljet).
+
+### PCB:n avoimet kohdat
+
+1. **OCXO-jalanjälki on arvio** (pinnit ±10.16 mm ruudukossa). Mittaa oikea OSC5A2B02 ennen tilausta ja korjaa `OCXO_OSC5A2B02_EST.kicad_mod`; reititys on tehtävä uudelleen (`make_all.sh`).
+2. SMA- ja BNC-liittimet ovat pystymalleja (piirilevylle pystyyn). Kotelon takapaneeliin tarvitaan myöhemmin reunaan asennettavat mallit (v0.2).
+3. Sijoittelu on automaattinen: tarkista käsin RF-alue, OCXO:n ympäristö (lämpö!) ja GND-paluuvirrat. Silkki ja tunnisteet vaativat siivousta.
+4. Pinoama (50 ohm:n johdon leveys) ja viivakoko on tarkistettava valitun valmistajan (esim. JLCPCB 4-layer) impedanssilaskurilla.
+5. Gerberit ja pick-and-place eivät vielä ole mukana; tehdään kun layout on hyväksytty.

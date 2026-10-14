@@ -1,6 +1,6 @@
 (kicad_sch (version 20230121) (generator hamref-gen)
 
-  (uuid 9cfb6f8b-2020-43c0-8114-395e7a4f1c23)
+  (uuid 9d08a952-c93c-4460-b22e-f5bd0f978dd5)
 
   (paper "A3")
   (lib_symbols)
@@ -8,7 +8,7 @@
   (sheet (at 30 30) (size 60 15)
     (stroke (width 0.1524) (type solid))
     (fill (color 0 0 0 0.0))
-    (uuid d5c6493d-de64-49f1-ac3e-886842cf8834)
+    (uuid bb57c95a-cc87-46c1-b2f6-fb5b78122206)
     (property "Sheetname" "Power" (at 30 29.0 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -17,7 +17,7 @@
     )
     (instances
       (project "hamref_proto_v0_1"
-        (path "/9cfb6f8b-2020-43c0-8114-395e7a4f1c23" (page "2"))
+        (path "/9d08a952-c93c-4460-b22e-f5bd0f978dd5" (page "2"))
       )
     )
   )
@@ -25,7 +25,7 @@
   (sheet (at 30 60) (size 60 15)
     (stroke (width 0.1524) (type solid))
     (fill (color 0 0 0 0.0))
-    (uuid 33301fd2-1181-41ad-be3b-c67f27dee526)
+    (uuid b512301a-c1b3-403a-a35f-8a5c9bc02cc5)
     (property "Sheetname" "GNSS" (at 30 59.0 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -34,7 +34,7 @@
     )
     (instances
       (project "hamref_proto_v0_1"
-        (path "/9cfb6f8b-2020-43c0-8114-395e7a4f1c23" (page "3"))
+        (path "/9d08a952-c93c-4460-b22e-f5bd0f978dd5" (page "3"))
       )
     )
   )
@@ -42,7 +42,7 @@
   (sheet (at 30 90) (size 60 15)
     (stroke (width 0.1524) (type solid))
     (fill (color 0 0 0 0.0))
-    (uuid 58d55098-ad8f-4563-b3e4-383f16b94578)
+    (uuid 5d47c2e6-d3e7-42a7-ad1b-2ea081b90130)
     (property "Sheetname" "Clock" (at 30 89.0 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -51,7 +51,7 @@
     )
     (instances
       (project "hamref_proto_v0_1"
-        (path "/9cfb6f8b-2020-43c0-8114-395e7a4f1c23" (page "4"))
+        (path "/9d08a952-c93c-4460-b22e-f5bd0f978dd5" (page "4"))
       )
     )
   )
@@ -59,7 +59,7 @@
   (sheet (at 30 120) (size 60 15)
     (stroke (width 0.1524) (type solid))
     (fill (color 0 0 0 0.0))
-    (uuid c1f43b33-cf45-4db4-b354-cc8ae14996da)
+    (uuid 0024a484-60ed-446c-be3a-69c3e47f9b8b)
     (property "Sheetname" "MCU_UI" (at 30 119.0 0)
       (effects (font (size 1.27 1.27)))
     )
@@ -68,7 +68,7 @@
     )
     (instances
       (project "hamref_proto_v0_1"
-        (path "/9cfb6f8b-2020-43c0-8114-395e7a4f1c23" (page "5"))
+        (path "/9d08a952-c93c-4460-b22e-f5bd0f978dd5" (page "5"))
       )
     )
   )
