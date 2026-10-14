@@ -30,7 +30,8 @@ for attempt in 1 2 3 4; do
   case "$R" in *"unrouted pairs 0"*) break;; esac
   SRC=routed.kicad_pcb
 done
-python3 "$HERE/silk_pass.py" routed.kicad_pcb routed.kicad_pcb
+python3 "$HERE/silk_pass.py" routed.kicad_pcb routed.kicad_pcb      # labels + designators first,
+python3 "$HERE/gnd_finish.py" routed.kicad_pcb routed.kicad_pcb     # then GND pours, edge via fence and stitching (avoids the silk text)
 python3 - <<'PY'
 import pcbnew,re,collections
 b=pcbnew.LoadBoard('routed.kicad_pcb'); pcbnew.WriteDRCReport(b,'drc.rpt',pcbnew.EDA_UNITS_MILLIMETRES,True)

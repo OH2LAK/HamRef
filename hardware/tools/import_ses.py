@@ -49,7 +49,7 @@ for nb in blocks(body, 'net '):
         via.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu); b.Add(via); nv += 1
 def gpour(layer):
     for z in b.Zones():
-        if z.GetLayer() == layer: return
+        if z.GetLayer() == layer and not z.GetIsRuleArea(): return
     z = pcbnew.ZONE(b); z.SetLayer(layer); z.SetNet(b.FindNet('GND'))
     ol = pcbnew.SHAPE_LINE_CHAIN()
     for (x, y) in [(0.6, 0.6), (99.4, 0.6), (99.4, 99.4), (0.6, 99.4)]: ol.Append(mm(50 + x), mm(40 + y))

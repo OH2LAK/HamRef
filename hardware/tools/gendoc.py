@@ -40,7 +40,7 @@ o+=['## Avoimet kohdat (v0.1 → layout)','',
 '10. Polyfuse- ja diodi-MPN:t ovat ehdotuksia – tarkista saatavuus ennen tilausta.','']
 o+=['## PCB v0.1 (layout)','',
 'Tiedosto: `hardware/proto-v0.1/hamref_proto_v0_1.kicad_pcb` (generoitu: `hardware/tools/build_pcb.py` + Freerouting 1.9.0).','',
-'- 100 × 100 mm, 4 kerrosta: F.Cu (osat + signaalit), In1.Cu = yhtenäinen GND-taso, In2.Cu = signaali-/virtareititys, B.Cu = signaalit + GND-valu. Kaikki osat ylhäällä.',
+'- 100 × 100 mm, 4 kerrosta: F.Cu (osat + signaalit), In1.Cu = yhtenäinen GND-taso, In2.Cu = signaali-/virtareititys, B.Cu = signaalit + GND-valu. Kaikki osat ylhäällä. GND-täyttö (pour) on F.Cu-, In1.Cu- ja B.Cu-kerroksilla, lämpökytkennöillä (thermal relief, jotta pinnit ovat käsin juotettavissa); GNSS_RF-johdon ympärillä F.Cu:n täyttö on estetty (50 ohmin mikroliuska, ei koplanaarimaata). Levyn reunalla on maavia-aita (GND-läpiviennit ~3 mm:n välein 1 mm:n päässä reunasta, aukot liitinten, testipisteiden ja johtojen kohdalla) ja täytön läpi 6 mm:n pistoviaruudukko (`gnd_finish.py`).',
 '- RP2350-Plus juotetaan castellated-padeilla oikeaan reunaan (USB-C ylöspäin). Moduulin rungon alla on kielletty-alue (ei johtoja/läpivientejä F.Cu:lla).',
 '- Takapaneelirivi ylhäällä: SMA (GNSS), BNC REF OUT, BNC 1PPS OUT, BNC AUX OUT. Käyttöliittymäpinnit (OLED, enkooderi, LED, reset, spare) ja testipisteet alareunassa.',
 '- LEA-M8S kierretty niin, että RF_IN (pinni 16) on lähimpänä SMA:ta; GNSS_RF on lukittu 0.37 mm:n johto F.Cu:lla In1-GND-tason päällä (50 ohm arvio, 0.21 mm prepreg – tarkista valmistajan pinoamasta).',
