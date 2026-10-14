@@ -16,3 +16,6 @@ firmware/build/
 
 # Local-only files (not part of the repo)
 docs/archive/
+
+# KiCad local history
+.history/

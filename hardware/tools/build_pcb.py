@@ -340,14 +340,73 @@ escape_via(DAC, 1, '5V_DAC', 1.1)
 # same-net neighbouring pads that cannot be routed between: tie directly (DAC VLOGIC/RESET)
 a = pad_pos(DAC, 2); c = pad_pos(DAC, 3)
 seg(a, c, 0.25, pcbnew.F_Cu, '3V3')
-# ---- text/silk ---------------------------------------------------------
-def txt(s, x, y, size=1.2, layer=pcbnew.F_SilkS):
+# ---- 3D models -----------------------------------------------------------
+# Stock KiCad footprints reference ${KICAD6_3DMODEL_DIR}; point them at the variable that the
+# installed KiCad actually defines (override with MODEL_VAR=KICAD9_3DMODEL_DIR etc.).
+MODEL_VAR = os.environ.get('MODEL_VAR', 'KICAD10_3DMODEL_DIR')
+MODEL_EXT = os.environ.get('MODEL_EXT', 'step')   # official libs ship .step (master) and .wrl; use MODEL_EXT=wrl if models are missing
+def wrl_box(path, boxes):
+    """boxes: list of (cx, cy, z0, w, h, d, (r,g,b)) in mm. VRML units are 0.1 inch."""
+    u = 1 / 2.54
+    out = ['#VRML V2.0 utf8']
+    for cx, cy, z0, w, h, d, col in boxes:
+        out.append('Transform { translation %.5f %.5f %.5f children Shape { appearance Appearance { material Material '
+                   '{ diffuseColor %.2f %.2f %.2f specularColor 0.4 0.4 0.4 shininess 0.3 } } geometry Box { size %.5f %.5f %.5f } } }'
+                   % (cx*u, cy*u, (z0 + d/2)*u, col[0], col[1], col[2], w*u, h*u, d*u))
+    open(path, 'w').write('\n'.join(out) + '\n')
+os.makedirs(os.path.join(PROJ, 'hamref.3dshapes'), exist_ok=True)
+SH = os.path.join(PROJ, 'hamref.3dshapes')
+wrl_box(os.path.join(SH, 'OCXO_OSC5A2B02_EST.wrl'), [(0, 0, 0.5, 25.4, 25.4, 10.2, (0.75, 0.75, 0.78))])
+wrl_box(os.path.join(SH, 'RP2350-Plus.wrl'), [(0, 0, 0.5, 21.0, 51.0, 1.0, (0.05, 0.35, 0.15)),
+                                              (0, -23.5, 1.5, 9.0, 7.4, 3.2, (0.8, 0.8, 0.82)),
+                                              (0, 6.0, 1.5, 12.0, 12.0, 1.0, (0.1, 0.1, 0.1))])
+def add_model(ref, name):
+    m = pcbnew.FP_3DMODEL(); m.m_Filename = '${KIPRJMOD}/hamref.3dshapes/' + name
+    m.m_Scale = pcbnew.VECTOR3D(1, 1, 1); m.m_Rotation = pcbnew.VECTOR3D(0, 0, 0); m.m_Offset = pcbnew.VECTOR3D(0, 0, 0)
+    fps[ref].Models().push_back(m)
+add_model(OCXO, 'OCXO_OSC5A2B02_EST.wrl'); add_model(MOD, 'RP2350-Plus.wrl')
+
+# ---- silk ----------------------------------------------------------------
+F_SILK = pcbnew.F_SilkS
+def txt(s, x, y, size=1.2, layer=F_SILK, thick=None):
     t = pcbnew.PCB_TEXT(board); t.SetText(s); t.SetPosition(P(x, y)); t.SetLayer(layer)
-    t.SetTextSize(VECTOR2I(mm(size), mm(size))); board.Add(t)
-txt('HamREF proto v0.1', 50, 99.0, 1.2)
+    t.SetTextSize(VECTOR2I(mm(size), mm(size))); t.SetTextThickness(mm(thick or size*0.15)); board.Add(t); return t
+# footprint-level warning texts: move from silk to fab layer (the board gets one tidy note instead)
+for fp in fps.values():
+    for g in fp.GraphicalItems():
+        if isinstance(g, pcbnew.PCB_TEXT) or g.GetClass() == 'FP_TEXT':
+            try:
+                if 'ESTIMATED' in g.GetText(): g.SetLayer(pcbnew.F_Fab)
+            except Exception: pass
+
+
+txt('HamREF proto v0.1', 64, 92.2, 1.2)
 txt('REAR: SMA ANT / BNC REF / 1PPS / AUX', 40, 2.2, 0.9)
-txt('OCXO pin geometry ESTIMATED - verify', OCXO and 46, 28.5, 0.8)
+txt('OCXO OSC5A2B02', 46, 41.4, 0.8); txt('FOOTPRINT ESTIMATED', 46, 43.2, 0.8); txt('- VERIFY BEFORE ORDER -', 46, 45.0, 0.8)
+
+# logo (HamREF by OH2LAK + satellite), vectorised from the enclosure mockup by make_logo.py
+LOGO_X, LOGO_Y, LOGO_W = 6.0, 58.0, 32.0
+lg = json.load(open(os.path.join(HERE, 'logo', 'hamref_logo.json')))
+k = LOGO_W / lg['w']
+def lpt(p): return pcbnew.VECTOR2I(mm(OX + LOGO_X + p[0]*k), mm(OY + LOGO_Y + p[1]*k))
+byid = {c['id']: c for c in lg['contours']}
+for c in lg['contours']:
+    if c['hole']: continue
+    ps = pcbnew.SHAPE_POLY_SET(); ps.NewOutline()
+    for p in c['pts']: v = lpt(p); ps.Append(v.x, v.y, 0)
+    for h in lg['contours']:
+        if h['hole'] and h['parent'] == c['id']:
+            hi = ps.NewHole(0)
+            for p in h['pts']: v = lpt(p); ps.Append(v.x, v.y, 0, hi)
+    sh = pcbnew.PCB_SHAPE(board); sh.SetShape(pcbnew.SHAPE_T_POLY); sh.SetFilled(True)
+    sh.SetLayer(F_SILK); sh.SetWidth(0); sh.SetPolyShape(ps); board.Add(sh)
+
+# reference designators are placed by silk_pass.py after routing (needs final vias/tracks)
 
 out = os.path.join(PROJ, 'hamref_proto_v0_1.kicad_pcb')
 pcbnew.SaveBoard(out, board)
+# (pcbnew returns model entries by value, so rewrite the paths in the saved file)
+txt_ = open(out).read()
+txt_ = re.sub(r'\$\{KICAD\d+_3DMODEL_DIR\}([^"]*?)\.wrl', lambda m: '${%s}%s.%s' % (MODEL_VAR, m.group(1), MODEL_EXT), txt_)
+open(out, 'w').write(txt_)
 print('saved', out, 'LEA rot', LEA_ROT, 'OCXO rot', OCXO_ROT)
