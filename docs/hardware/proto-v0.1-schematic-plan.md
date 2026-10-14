@@ -153,7 +153,7 @@ RP2350-Plus (omat symboli ja jalanjälki), I2C0-pullupit, OLED-, enkooderi- ja L
 
 ## Avoimet kohdat (v0.1 → layout)
 
-1. **RP2350-Plus-jalanjälki** (`hamref.pretty`) on paikkamerkki (pad 3.8×1.6 mm, rivit 19.8 mm välein). Tarkista Waveshare STEP-/mittapiirroksesta ennen layoutia; USB-C-pää ulkonee, tarvitaan reunasijoitus tai leikkaus.
+1. **RP2350-Plus-jalanjälki** (`hamref.pretty`): padien geometria on otettu viralliselta Pico 2 -jalanjäljeltä (MIT, Raspberry Pi Ltd; rivit ±8.89 mm, pitch 2.54 mm, SMD-pad 3.5×1.7 mm). Varmista moduulin ääriviivat Waveshaaren STEP-mallista; USB-C-pää ulkonee, tarvitaan reunasijoitus tai leikkaus.
 2. **OCXO-jalanjälki**: OSC5A2B02:n pinnigeometriaa ei ole vahvistettu; paikkamerkkinä 1×5-header, pad N = OCXO-pinni N (datasheet bottom view). Mittaa kappaleesta.
 3. **Si5351C ilman kidettä**: CLKIN-käyttö ilman XTAL:ia pitää varmistaa Skyworksin AN619/datasheetistä ja oikealla piirillä; Y1 on DNP varalle (XA/XB-nettien kytkentä).
 4. **Si5351C EP-koko** (2.6×2.6 vs 2.7×2.7 mm) ja jalanjälki varmistettava valmistajan land patternista.
