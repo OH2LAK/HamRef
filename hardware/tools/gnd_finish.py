@@ -3,12 +3,34 @@ the board edge and a stitching-via grid, then refill.  Idempotent.
 Usage: gnd_finish.py <in.kicad_pcb> <out.kicad_pcb>"""
 import sys, math, pcbnew
 from pcbnew import FromMM as mm, VECTOR2I
-OX, OY, BW, BH = 50.0, 40.0, 100.0, 100.0
+OX, OY, BW, BH = 50.0, 40.0, 100.0, 80.0
+CORNER_R, SIDE = 1.5, 1.0
 FENCE_INSET, FENCE_PITCH, STITCH_PITCH = 1.0, 3.0, 6.0
 VIA_D, VIA_DRILL = 0.6, 0.3
 b = pcbnew.LoadBoard(sys.argv[1])
 gnd = b.FindNet('GND')
 def P(x, y): return VECTOR2I(mm(OX + x), mm(OY + y))
+
+# 0. side strips ---------------------------------------------------------------
+# The side keep-out bands only served the autorouter; the unmasked GND strips replace them.
+_gone = []
+for z in list(b.Zones()):
+    if z.GetIsRuleArea():
+        bb = z.GetBoundingBox()
+        if bb.GetWidth() < mm(3) and bb.GetHeight() > mm(50): b.Remove(z); _gone.append(z)
+    elif z.GetZoneName() == 'SIDE_STRIP': b.Remove(z); _gone.append(z)
+for d in list(b.GetDrawings()):
+    if d.GetLayer() in (pcbnew.F_Mask, pcbnew.B_Mask): b.Remove(d); _gone.append(d)
+for (xa, xb) in ((0.0, SIDE), (BW - SIDE, BW)):
+    for L in (pcbnew.F_Cu, pcbnew.B_Cu):
+        z = pcbnew.ZONE(b); z.SetLayer(L); z.SetNet(b.FindNet('GND')); z.SetZoneName('SIDE_STRIP')
+        ol = pcbnew.SHAPE_LINE_CHAIN()
+        for (x, y) in [(xa, CORNER_R + 0.1), (xb, CORNER_R + 0.1), (xb, BH - CORNER_R - 0.1), (xa, BH - CORNER_R - 0.1)]: ol.Append(mm(OX + x), mm(OY + y))
+        ol.SetClosed(True); z.Outline().AddOutline(ol)
+        z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL); z.SetMinThickness(mm(0.2)); b.Add(z)
+    for L in (pcbnew.F_Mask, pcbnew.B_Mask):       # bare copper (HASL/ENIG) where the case grooves touch the board
+        r = pcbnew.PCB_SHAPE(b); r.SetShape(pcbnew.SHAPE_T_RECT); r.SetFilled(True); r.SetWidth(0); r.SetLayer(L)
+        r.SetStart(P(xa - (0.5 if xa == 0.0 else 0.0), CORNER_R + 0.1)); r.SetEnd(P(xb + (0.5 if xb == BW else 0.0), BH - CORNER_R - 0.1)); b.Add(r)
 
 # 1. pours -------------------------------------------------------------------
 def pour(layer):
@@ -16,7 +38,7 @@ def pour(layer):
         if z.GetLayer() == layer and not z.GetIsRuleArea() and z.GetNetname() == 'GND': return z
     z = pcbnew.ZONE(b); z.SetLayer(layer); z.SetNet(gnd)
     ol = pcbnew.SHAPE_LINE_CHAIN()
-    for (x, y) in [(0.6, 0.6), (BW-0.6, 0.6), (BW-0.6, BH-0.6), (0.6, BH-0.6)]: ol.Append(mm(OX + x), mm(OY + y))
+    for (x, y) in [(1.9, 0.6), (BW-1.9, 0.6), (BW-0.6, 1.9), (BW-0.6, BH-1.9), (BW-1.9, BH-0.6), (1.9, BH-0.6), (0.6, BH-1.9), (0.6, 1.9)]: ol.Append(mm(OX + x), mm(OY + y))
     ol.SetClosed(True); z.Outline().AddOutline(ol); b.Add(z); return z
 for L in (pcbnew.F_Cu, pcbnew.B_Cu, pcbnew.In1_Cu): pour(L)
 for z in b.Zones():
@@ -82,16 +104,19 @@ def add(x, y):
     v.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu); b.Add(v); vias.append(v); tracks.append(v)
 nfence = nskip = 0
 pts = []
-n = int((BW - 2*FENCE_INSET) / FENCE_PITCH)
-for i in range(n + 1):
-    t = FENCE_INSET + i * (BW - 2*FENCE_INSET) / n
-    pts += [(t, FENCE_INSET), (t, BH - FENCE_INSET)]
-    if 0 < i < n: pts += [(FENCE_INSET, t), (BW - FENCE_INSET, t)]
-for x, y in pts:
-    horiz = abs(y - FENCE_INSET) < 1e-6 or abs(y - (BH - FENCE_INSET)) < 1e-6      # point on top/bottom edge -> slide along x
+SV = SIDE * 0.7                       # side vias sit in the groove strip
+n = int((BW - 5.0) / FENCE_PITCH)
+for i in range(n + 1):                # top/bottom edges
+    t = 2.5 + i * (BW - 5.0) / n
+    pts += [(t, FENCE_INSET, 'h'), (t, BH - FENCE_INSET, 'h')]
+m = int((BH - 6.0) / FENCE_PITCH)
+for i in range(m + 1):                # side strips
+    t = 3.0 + i * (BH - 6.0) / m
+    pts += [(SV, t, 'v'), (BW - SV, t, 'v')]
+for x, y, kind in pts:
     for sh in (0, 0.8, -0.8, 1.6, -1.6):
-        xx, yy = (x + sh, y) if horiz else (x, y + sh)
-        if FENCE_INSET <= xx <= BW - FENCE_INSET and FENCE_INSET <= yy <= BH - FENCE_INSET and ok(xx, yy, False):
+        xx, yy = (x + sh, y) if kind == 'h' else (x, y + sh)
+        if ok(xx, yy, False):
             add(xx, yy); nfence += 1; break
     else: nskip += 1
 nst = 0
@@ -103,6 +128,16 @@ while y < BH - 3:
         if ok(x, y, True): add(x, y); nst += 1
         x += STITCH_PITCH
     y += STITCH_PITCH; row += 1
+filler = pcbnew.ZONE_FILLER(b); filler.Fill(b.Zones())
+# starved thermals (single spoke): connect those THT pads solid instead
+import re, tempfile, os
+pcbnew.SaveBoard(sys.argv[2], b)
+_rep = os.path.join(tempfile.gettempdir(), 'gf_drc.rpt'); pcbnew.WriteDRCReport(b, _rep, pcbnew.EDA_UNITS_MILLIMETRES, True)
+for m in re.finditer(r'\[starved_thermal\][^\n]*\n[^\n]*\n[^\n]*\n\s*@\(([\d.]+) mm, ([\d.]+) mm\): (?:PTH|Pad)', open(_rep).read()):
+    px, py = mm(float(m.group(1))), mm(float(m.group(2)))
+    for fp_ in b.GetFootprints():
+        for p_ in fp_.Pads():
+            if abs(p_.GetPosition().x - px) < 1000 and abs(p_.GetPosition().y - py) < 1000: p_.SetZoneConnection(pcbnew.ZONE_CONNECTION_FULL)
 filler = pcbnew.ZONE_FILLER(b); filler.Fill(b.Zones())
 pcbnew.SaveBoard(sys.argv[2], b)
 print('gnd_finish: fence vias', nfence, '(skipped', nskip, '), stitching vias', nst)

@@ -52,7 +52,7 @@ def gpour(layer):
         if z.GetLayer() == layer and not z.GetIsRuleArea(): return
     z = pcbnew.ZONE(b); z.SetLayer(layer); z.SetNet(b.FindNet('GND'))
     ol = pcbnew.SHAPE_LINE_CHAIN()
-    for (x, y) in [(0.6, 0.6), (99.4, 0.6), (99.4, 99.4), (0.6, 99.4)]: ol.Append(mm(50 + x), mm(40 + y))
+    for (x, y) in [(1.9, 0.6), (98.1, 0.6), (99.4, 1.9), (99.4, 78.1), (98.1, 79.4), (1.9, 79.4), (0.6, 78.1), (0.6, 1.9)]: ol.Append(mm(50 + x), mm(40 + y))
     ol.SetClosed(True); z.Outline().AddOutline(ol); z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL); z.SetMinThickness(mm(0.2)); b.Add(z)
 gpour(pcbnew.B_Cu); gpour(pcbnew.F_Cu)
 filler = pcbnew.ZONE_FILLER(b); filler.Fill(b.Zones())

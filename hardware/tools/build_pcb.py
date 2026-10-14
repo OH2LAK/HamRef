@@ -11,7 +11,9 @@ NETL = open(os.path.join(PROJ, 'n.net')).read()
 HERE = os.path.dirname(os.path.abspath(__file__))
 FPDIR = '/usr/share/kicad/footprints'
 OX, OY = 50.0, 40.0           # board origin on sheet
-BW, BH = 100.0, 100.0         # board size
+BW, BH = 100.0, 80.0          # board size (AKG 105.26: PCB sits in grooves, free width 98 mm, depth 80 mm)
+CORNER_R = 1.5                # light corner rounding
+SIDE = 1.0                    # groove depth: unmasked GND strip along both long sides
 
 # ---- netlist: (ref,pin)->net
 pin_net = {}
@@ -73,32 +75,32 @@ def R_(val, i=0): return ref_by_val[val][i]
 SMA, MOD = R_('SMA ANT'), R_('RP2350-Plus'); LEA = R_('LEA-M8S-0'); OCXO = R_('OSC5A2B02')
 BNC_REF, BNC_PPS, BNC_AUX = R_('BNC REF OUT'), R_('BNC 1PPS OUT'), R_('BNC AUX OUT')
 SI = R_('Si5351C-B-GM'); DAC = R_('AD5693R'); TPS = R_('TPS2065C'); LDO = R_('LP5907-3.3')
-holes = ref_by_val['MountingHole_M3']
-place(holes[0], 4, 4); place(holes[1], 4, 96); place(holes[2], 96, 96); place(holes[3], 96, 60)
-place(SMA, 14, 10)
-place(BNC_REF, 28, 11); place(BNC_PPS, 45.5, 11); place(BNC_AUX, 63, 11)
-place(MOD, 86, 27.5)
+holes = []   # no mounting holes: the board slides into the case grooves
+# connector footprints put the case/board edge at local y=-4.5 (SMA 901-143) and y=-5.5 (BNC TE 1478035)
+place(SMA, 11, 4.5)
+place(BNC_REF, 30, 7.6); place(BNC_PPS, 47, 7.6); place(BNC_AUX, 64, 7.6)   # 7.6 mm from the edge: the 4 mm shield-post pads keep 0.6 mm edge clearance
+place(MOD, 84.0, 28)
 # LEA: pick rotation that puts RF_IN (pad 16) closest to the SMA centre pin
 best = None
 for rot in (0, 90, 180, 270):
-    place(LEA, 17, 36, rot)
+    place(LEA, 14, 26.5, rot)
     a = pad_pos(LEA, 16); b = pad_pos(SMA, 1)
     d = math.hypot(a[0]-b[0], a[1]-b[1])
     if best is None or d < best[0]: best = (d, rot)
-LEA_ROT = best[1]; place(LEA, 17, 36, LEA_ROT)
+LEA_ROT = best[1]; place(LEA, 14, 26.5, LEA_ROT)
 # OCXO: choose rotation putting pads 1 and 3 toward the upper right (towards buffers / Si5351)
 best = None
 for rot in (0, 90, 180, 270):
-    place(OCXO, 46, 43, rot)
+    place(OCXO, 46, 30.5, rot)
     p1 = pad_pos(OCXO, 1); p3 = pad_pos(OCXO, 3)
     score = -(p1[1] + p3[1]) / 2 + 0.7 * (p1[0] + p3[0]) / 2
     if best is None or score > best[0]: best = (score, rot)
-OCXO_ROT = best[1]; place(OCXO, 46, 43, OCXO_ROT)
-place(SI, 65, 31); place(LDO, 36, 23)
-for ref, xy in {R_('J OLED 0.91in I2C'): (58, 79), R_('J ENCODER'): (66, 79), R_('J LEDS (2x WS2812B)'): (73, 79),
-                R_('J RESET GNSS (short=reset)'): (79, 79), R_('J RUN (short=MCU reset)'): (84, 79), R_('J SPARE GPIO'): (92, 74)}.items():
+OCXO_ROT = best[1]; place(OCXO, 46, 30.5, OCXO_ROT)
+place(SI, 66, 31); place(LDO, 37, 51)
+for ref, xy in {R_('J OLED 0.91in I2C'): (58, 60), R_('J ENCODER'): (66, 60), R_('J LEDS (2x WS2812B)'): (73, 60),
+                R_('J RESET GNSS (short=reset)'): (79, 60), R_('J RUN (short=MCU reset)'): (84, 60), R_('J SPARE GPIO'): (92, 58)}.items():
     place(ref, *xy)
-place(R_('5V_EXT'), 8, 84); place(R_('JP1 PWR SEL'), 16, 84)
+place(R_('5V_EXT'), 7, 60); place(R_('JP1 PWR SEL'), 17, 60)
 
 # ---- occupancy grid (0.25 mm) -------------------------------------------
 G = 0.25
@@ -109,11 +111,20 @@ def mark(x0, y0, x1, y1, m=0.0):
     j0 = max(0, int((y0-m)/G)); j1 = min(NY, int(math.ceil((y1+m)/G)))
     if i1 > i0 and j1 > j0: occ[j0:j1, i0:i1] = True
 # board margin
-mark(-1, -1, BW+1, 1.5); mark(-1, BH-1.5, BW+1, BH+1); mark(-1, -1, 1.5, BH+1); mark(BW-1.5, -1, BW+1, BH+1)
-placed = set([holes[0], holes[1], holes[2], holes[3], SMA, BNC_REF, BNC_PPS, BNC_AUX, MOD, LEA, OCXO, SI, LDO] +
+mark(-1, -1, BW+1, 1.5); mark(-1, BH-1.5, BW+1, BH+1); mark(-1, -1, 2.0, BH+1); mark(BW-2.0, -1, BW+1, BH+1)   # sides: 1 mm groove + 1 mm clearance
+placed = set([SMA, BNC_REF, BNC_PPS, BNC_AUX, MOD, LEA, OCXO, SI, LDO] +
              [R_(v) for v in ('J OLED 0.91in I2C','J ENCODER','J LEDS (2x WS2812B)','J RESET GNSS (short=reset)','J RUN (short=MCU reset)','J SPARE GPIO','5V_EXT','JP1 PWR SEL')])
 for ref in placed:
     x0, y0, x1, y1 = bbox_mm(fps[ref]); mark(x0, y0, x1, y1, 0.9)
+# keep the 50 ohm RF trace corridor (SMA -> LEA RF_IN) free of other parts
+_a = pad_pos(SMA, 1); _b = pad_pos(LEA, 16)
+_mid = (_a[0], _b[1]) if abs(_a[0]-_b[0]) < abs(_a[1]-_b[1]) else (_b[0], _a[1])
+for (_p, _q) in ((_a, _mid), (_mid, _b)):
+    mark(min(_p[0], _q[0]) - 0.3, min(_p[1], _q[1]) - 0.3, max(_p[0], _q[0]) + 0.3, max(_p[1], _q[1]) + 0.3, 1.0)
+# logo + title keep-out (silk artwork must not be buried under parts)
+_lg = json.load(open(os.path.join(HERE, 'logo', 'hamref_logo.json')))
+mark(4.5 - 0.5, 47.0 - 0.5, 4.5 + 26.0 + 0.5, 47.0 + 26.0 * _lg['h'] / _lg['w'] + 0.5)
+mark(10, 68.5, 31, 70.7)
 # module keep-out for components: whole module footprint
 x0, y0, x1, y1 = bbox_mm(fps[MOD]); mark(x0, y0, x1, y1, 0.5)
 
@@ -212,18 +223,31 @@ for p in rest:
     if a is None or a not in fps: a = LEA
     place_free(p['ref'], a)
 # test points: row along the bottom edge
-for i, p in enumerate(tps):
-    place(p['ref'], 9 + i*5.4, 97.2)
+NEAR_TP = {'TP5': 'C20', 'TP9': LEA, 'TP2': OCXO}
+row = 0
+for p in tps:
+    if p['ref'] in NEAR_TP:          # nets that live in the GNSS corner: keep their test points next to the net
+        place_free(p['ref'], NEAR_TP[p['ref']]); continue
+    place(p['ref'], 9 + row*5.4, 77.4); row += 1
 
 # ---- outline ------------------------------------------------------------
-edge = pcbnew.PCB_SHAPE(board); edge.SetShape(pcbnew.SHAPE_T_RECT)
-edge.SetStart(P(0, 0)); edge.SetEnd(P(BW, BH)); edge.SetLayer(pcbnew.Edge_Cuts); edge.SetWidth(mm(0.1)); board.Add(edge)
+def edge_seg(p, q):
+    e = pcbnew.PCB_SHAPE(board); e.SetShape(pcbnew.SHAPE_T_SEGMENT); e.SetStart(P(*p)); e.SetEnd(P(*q)); e.SetLayer(pcbnew.Edge_Cuts); e.SetWidth(mm(0.1)); board.Add(e)
+def edge_arc(c, a0, a1):
+    R = CORNER_R; am = (a0 + a1) / 2
+    pt = lambda a: (c[0] + R*math.cos(math.radians(a)), c[1] + R*math.sin(math.radians(a)))
+    e = pcbnew.PCB_SHAPE(board); e.SetShape(pcbnew.SHAPE_T_ARC); e.SetArcGeometry(P(*pt(a0)), P(*pt(am)), P(*pt(a1)))
+    e.SetLayer(pcbnew.Edge_Cuts); e.SetWidth(mm(0.1)); board.Add(e)
+R_c = CORNER_R
+edge_seg((R_c, 0), (BW-R_c, 0)); edge_seg((BW, R_c), (BW, BH-R_c)); edge_seg((BW-R_c, BH), (R_c, BH)); edge_seg((0, BH-R_c), (0, R_c))
+edge_arc((R_c, R_c), 180, 270); edge_arc((BW-R_c, R_c), 270, 360); edge_arc((BW-R_c, BH-R_c), 0, 90); edge_arc((R_c, BH-R_c), 90, 180)
 
 # ---- zones --------------------------------------------------------------
 def add_zone(layer, netname, inset=0.6):
     z = pcbnew.ZONE(board); z.SetLayer(layer); z.SetNet(net(netname))
     o = pcbnew.SHAPE_LINE_CHAIN()
-    for (x, y) in [(inset, inset), (BW-inset, inset), (BW-inset, BH-inset), (inset, BH-inset)]: o.Append(mm(OX+x), mm(OY+y))
+    c = 1.3
+    for (x, y) in [(inset+c, inset), (BW-inset-c, inset), (BW-inset, inset+c), (BW-inset, BH-inset-c), (BW-inset-c, BH-inset), (inset+c, BH-inset), (inset, BH-inset-c), (inset, inset+c)]: o.Append(mm(OX+x), mm(OY+y))
     o.SetClosed(True); z.Outline().AddOutline(o)
     z.SetPadConnection(pcbnew.ZONE_CONNECTION_FULL); z.SetMinThickness(mm(0.2))
     board.Add(z); return z
@@ -241,7 +265,7 @@ for (x, y) in [(x_l, 1.0), (x_r, 1.0), (x_r, 54), (x_l, 54)]: o.Append(mm(OX+x),
 o.SetClosed(True); ko.Outline().AddOutline(o); board.Add(ko)
 
 # edge keep-out bands (no tracks/vias within 0.5 mm of the outline)
-for (x0_, y0_, x1_, y1_) in [(-1, -1, BW+1, 0.5), (-1, BH-0.5, BW+1, BH+1), (-1, -1, 0.5, BH+1), (BW-0.5, -1, BW+1, BH+1)]:
+for (x0_, y0_, x1_, y1_) in [(-1, -1, BW+1, 0.5), (-1, BH-0.5, BW+1, BH+1), (-1, -1, 1.6, BH+1), (BW-1.6, -1, BW+1, BH+1)]:   # side bands are removed by gnd_finish (GND strip + vias go there)
     z = pcbnew.ZONE(board); z.SetIsRuleArea(True)
     ls_ = pcbnew.LSET()
     for L_ in (pcbnew.F_Cu, pcbnew.In1_Cu, pcbnew.In2_Cu, pcbnew.B_Cu): ls_.AddLayer(L_)
@@ -259,7 +283,7 @@ ns.m_NetClasses['Power'] = pw
 for n in ('5V_MAIN', '5V_OCXO', '5V_USB', '5V_EXT', 'VSYS', 'VBUS_MOD', '3V3', '3V3_GNSS'):
     if n in nets: nets[n].SetNetClass(pw)
 ds.m_MinClearance = mm(0.15)
-try: ds.m_CopperEdgeClearance = mm(0.3)
+try: ds.m_CopperEdgeClearance = mm(0.0)
 except Exception: pass
 
 # ---- RF trace (50 ohm microstrip on F.Cu over In1 GND, ~0.37 mm for 0.21 mm prepreg) -----
@@ -271,6 +295,18 @@ mid = (a[0], b[1]) if abs(a[0]-b[0]) < abs(a[1]-b[1]) else (b[0], a[1])
 seg(a, mid, 0.37, pcbnew.F_Cu, 'GNSS_RF'); seg(mid, b, 0.37, pcbnew.F_Cu, 'GNSS_RF')
 
 
+pre_vias = []   # escape vias are placed first so the GND fan-out vias keep their distance
+def escape_via(ref, padnum, netname, dist=1.0):
+    pc = pad_pos(ref, padnum); ic = fps[ref].GetPosition(); icx = ic.x/1e6 - OX; icy = ic.y/1e6 - OY
+    dx, dy = pc[0]-icx, pc[1]-icy; L = math.hypot(dx, dy) or 1.0
+    # snap to dominant axis
+    if abs(dx) > abs(dy): dx, dy = math.copysign(1, dx), 0
+    else: dx, dy = 0, math.copysign(1, dy)
+    q = (pc[0] + dx*dist, pc[1] + dy*dist)
+    seg(pc, q, 0.2, pcbnew.F_Cu, netname)
+    v = pcbnew.PCB_VIA(board); v.SetPosition(P(*q)); v.SetNet(net(netname)); v.SetWidth(mm(0.6)); v.SetDrill(mm(0.3))
+    v.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu); v.SetLocked(True); board.Add(v); pre_vias.append(q)
+escape_via(DAC, 1, '5V_DAC', 1.1)
 # ---- GND fan-out vias (stitch SMD GND pads to the In1 plane before autorouting) --------
 def rect_dist(px, py, r):
     dx = max(r[0]-px, 0, px-r[2]); dy = max(r[1]-py, 0, py-r[3]); return math.hypot(dx, dy)
@@ -279,13 +315,13 @@ for ref, fp in fps.items():
     for pad in fp.Pads():
         bb = pad.GetBoundingBox()
         pad_rects.append((bb.GetLeft()/1e6-OX, bb.GetTop()/1e6-OY, bb.GetRight()/1e6-OX, bb.GetBottom()/1e6-OY, pad.GetNetname(), pad.GetAttribute()))
-vias_xy = []
+vias_xy = list(pre_vias)
 VIA_D, VIA_DR = 0.6, 0.3
 def add_via(x, y):
     v = pcbnew.PCB_VIA(board); v.SetPosition(P(x, y)); v.SetNet(net('GND')); v.SetWidth(mm(VIA_D)); v.SetDrill(mm(VIA_DR))
     v.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu); v.SetLocked(True); board.Add(v); vias_xy.append((x, y))
 def via_ok(x, y, own):
-    if x < 1.2 or y < 1.2 or x > BW-1.2 or y > BH-1.2: return False
+    if x < 2.0 or y < 1.2 or x > BW-2.0 or y > BH-1.2: return False
     for r in pad_rects:
         if r[4] == 'GND' and r is own: continue
         d = rect_dist(x, y, r)
@@ -326,17 +362,6 @@ for ref, fp in fps.items():
         if not done: nfail.append((ref, pad.GetNumber()))
 print('GND fanout vias', nfan, 'failed', nfail)
 
-def escape_via(ref, padnum, netname, dist=1.0):
-    pc = pad_pos(ref, padnum); ic = fps[ref].GetPosition(); icx = ic.x/1e6 - OX; icy = ic.y/1e6 - OY
-    dx, dy = pc[0]-icx, pc[1]-icy; L = math.hypot(dx, dy) or 1.0
-    # snap to dominant axis
-    if abs(dx) > abs(dy): dx, dy = math.copysign(1, dx), 0
-    else: dx, dy = 0, math.copysign(1, dy)
-    q = (pc[0] + dx*dist, pc[1] + dy*dist)
-    seg(pc, q, 0.2, pcbnew.F_Cu, netname)
-    v = pcbnew.PCB_VIA(board); v.SetPosition(P(*q)); v.SetNet(net(netname)); v.SetWidth(mm(0.6)); v.SetDrill(mm(0.3))
-    v.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu); v.SetLocked(True); board.Add(v)
-escape_via(DAC, 1, '5V_DAC', 1.1)
 # same-net neighbouring pads that cannot be routed between: tie directly (DAC VLOGIC/RESET)
 a = pad_pos(DAC, 2); c = pad_pos(DAC, 3)
 seg(a, c, 0.25, pcbnew.F_Cu, '3V3')
@@ -358,8 +383,8 @@ os.makedirs(os.path.join(PROJ, 'hamref.3dshapes'), exist_ok=True)
 SH = os.path.join(PROJ, 'hamref.3dshapes')
 wrl_box(os.path.join(SH, 'OCXO_OSC5A2B02_EST.wrl'), [(0, 0, 0.5, 25.4, 25.4, 10.2, (0.75, 0.75, 0.78))])
 wrl_box(os.path.join(SH, 'RP2350-Plus.wrl'), [(0, 0, 0.5, 21.0, 51.0, 1.0, (0.05, 0.35, 0.15)),
-                                              (0, -23.5, 1.5, 9.0, 7.4, 3.2, (0.8, 0.8, 0.82)),
-                                              (0, 6.0, 1.5, 12.0, 12.0, 1.0, (0.1, 0.1, 0.1))])
+                                              (0, 23.5, 1.5, 9.0, 7.4, 3.2, (0.8, 0.8, 0.82)),
+                                              (0, -6.0, 1.5, 12.0, 12.0, 1.0, (0.1, 0.1, 0.1))])
 def add_model(ref, name):
     m = pcbnew.FP_3DMODEL(); m.m_Filename = '${KIPRJMOD}/hamref.3dshapes/' + name
     m.m_Scale = pcbnew.VECTOR3D(1, 1, 1); m.m_Rotation = pcbnew.VECTOR3D(0, 0, 0); m.m_Offset = pcbnew.VECTOR3D(0, 0, 0)
@@ -371,6 +396,10 @@ F_SILK = pcbnew.F_SilkS
 def txt(s, x, y, size=1.2, layer=F_SILK, thick=None):
     t = pcbnew.PCB_TEXT(board); t.SetText(s); t.SetPosition(P(x, y)); t.SetLayer(layer)
     t.SetTextSize(VECTOR2I(mm(size), mm(size))); t.SetTextThickness(mm(thick or size*0.15)); board.Add(t); return t
+# connector footprints draw the board edge on Edge.Cuts: keep that out of the real outline
+for fp in fps.values():
+    for g in fp.GraphicalItems():
+        if g.GetLayer() == pcbnew.Edge_Cuts: g.SetLayer(pcbnew.F_Fab)
 # footprint-level warning texts: move from silk to fab layer (the board gets one tidy note instead)
 for fp in fps.values():
     for g in fp.GraphicalItems():
@@ -380,11 +409,11 @@ for fp in fps.values():
             except Exception: pass
 
 
-txt('HamREF proto v0.1', 24, 73.8, 1.2)
-txt('OCXO OSC5A2B02', 46, 41.4, 0.8); txt('FOOTPRINT ESTIMATED', 46, 43.2, 0.8); txt('- VERIFY BEFORE ORDER -', 46, 45.0, 0.8)
+txt('HamREF proto v0.1', 18, 69.5, 1.2)
+txt('OCXO OSC5A2B02', 46, 28.4, 0.8); txt('FOOTPRINT ESTIMATED', 46, 30.2, 0.8); txt('- VERIFY BEFORE ORDER -', 46, 32.0, 0.8)
 
 # logo (HamREF by OH2LAK + satellite), vectorised from the enclosure mockup by make_logo.py
-LOGO_X, LOGO_Y, LOGO_W = 6.0, 58.0, 32.0
+LOGO_X, LOGO_Y, LOGO_W = 4.5, 47.0, 26.0
 lg = json.load(open(os.path.join(HERE, 'logo', 'hamref_logo.json')))
 k = LOGO_W / lg['w']
 def lpt(p): return pcbnew.VECTOR2I(mm(OX + LOGO_X + p[0]*k), mm(OY + LOGO_Y + p[1]*k))

@@ -2,7 +2,7 @@
 other texts, the logo and the board edge.  Usage: silk_pass.py <in.kicad_pcb> <out.kicad_pcb>"""
 import sys, pcbnew
 from pcbnew import FromMM as mm, VECTOR2I
-OX, OY, BW, BH = 50.0, 40.0, 100.0, 100.0
+OX, OY, BW, BH = 50.0, 40.0, 100.0, 80.0
 SIZE, THICK = 0.8, 0.15
 b = pcbnew.LoadBoard(sys.argv[1])
 F = pcbnew.F_SilkS
@@ -49,7 +49,7 @@ for d in b.GetDrawings():
     else: obst.append(R(d.GetBoundingBox(), 0.3))
 if logo: obst.append((logo[0] - 0.6, logo[1] - 0.6, logo[2] + 0.6, logo[3] + 0.6))
 
-MANUAL = {'OSC5A2B02': (46.0, 38.4)}
+MANUAL = {'OSC5A2B02': (46.0, 35.4)}
 def style(r, size):
     r.SetVisible(True); r.SetLayer(F); r.SetTextSize(VECTOR2I(mm(size), mm(size))); r.SetTextThickness(mm(THICK))
 def try_place(fp, cands):
@@ -116,8 +116,8 @@ miss = []
 def lab(ok, what):
     if not ok: miss.append(what)
 # rear-panel connector names (above each connector, on the board edge side)
-for ref, s_, x in (('J2', 'GNSS ANT', 14.0), ('J3', 'REF 10M', 28.0), ('J4', '1PPS', 45.5), ('J5', 'AUX', 63.0)):
-    lab(put_text(s_, [(x, 1.9), (x, 2.2), (x, 2.6)]), ref)
+for ref, s_, x in (('J2', 'GNSS ANT', 11.0), ('J3', 'REF 10M', 30.0), ('J4', '1PPS', 47.0), ('J5', 'AUX', 64.0)):
+    lab(put_text(s_, [(x + dx, y) for y in (16.2, 16.8, 15.6) for dx in (0, -1.5, 1.5, -3, 3)]), ref)
 HDR = {'J1': ('EXT 5V', ['+5V', 'GND']), 'J6': ('OLED', ['GND', '3V3', 'SCL', 'SDA']),
        'J7': ('ENCODER', ['A', 'B', 'SW', 'GND']), 'J8': ('LEDS', ['5V', 'DIN', 'GND']),
        'J9': ('GNSS RST', []), 'J10': ('MCU RST', ['RUN', 'GND']),
@@ -127,16 +127,18 @@ for ref, (title, pins) in HDR.items():
     lab(pin_labels(byref[ref], pins), ref + ' pins')
     lab(near(byref[ref], title, ('above', 'right', 'below', 'left')), ref + ' title')
 # jumpers that sit in tight spots: one descriptive line each
-lab(near(byref['JP1'], 'PWR SEL 1-2 USB 2-3 EXT', ('below',), shifts=tuple(x*0.5 for x in range(-24, 25)), ang=0), 'JP1')
-lab(put_text('JP3 1PPS SRC 1-2 GNSS 2-3 MCU', [(46.0, 48.6), (46.0, 50.0), (46.0, 51.4)]) or near(byref['JP3'], '1PPS SRC', ('above', 'below', 'right', 'left')), 'JP3')
+lab(near(byref['JP1'], 'SEL 1-2 USB 2-3 EXT', ('below',), shifts=tuple(x*0.5 for x in range(-24, 25)), ang=0), 'JP1')
+lab(put_text('1PPS 1-2 GNSS 2-3 MCU', [(46.0, 44.6), (46.0, 46.0), (46.0, 47.4)]) or near(byref['JP3'], '1PPS SRC', ('above', 'below', 'right', 'left')), 'JP3')
 lab(near(byref['JP2'], 'EN=short: OCXO always on', ('right', 'below', 'above')), 'JP2 note')
 # test point net names, vertical above each pad
 TPN = {'TP1': '5V', 'TP2': '5V_OX', 'TP3': '3V3_GN', 'TP4': '3V3', 'TP5': '5V_DAC', 'TP6': 'GND', 'TP7': 'GTXD',
        'TP8': 'GRXD', 'TP9': 'PPS_G', 'TP10': 'EFC', 'TP11': 'OCXO', 'TP12': 'AUX', 'TP13': 'PPS', 'TP14': 'FLT'}
 for i, (ref, nm) in enumerate(TPN.items()):
+    if ref in ('TP2', 'TP5', 'TP9'):
+        lab(near(byref[ref], nm, ('right', 'left', 'above', 'below')), ref); continue
     l_, t_, r_, bt_ = fp_body(byref[ref]); x = (l_ + r_) / 2
-    rows = [94.5, 92.6] if i % 2 == 0 else [92.6, 94.5]     # two staggered rows above the test points
-    lab(put_text(nm, [(x, rows[0]), (x, rows[1]), (x, 90.7)]), ref)
+    rows = [74.8, 72.9] if i % 2 == 0 else [72.9, 74.8]     # two staggered rows above the test points
+    lab(put_text(nm, [(x, rows[0]), (x, rows[1]), (x, 71.0)]), ref)
 print('labels not placed:', miss)
 
 failed = []

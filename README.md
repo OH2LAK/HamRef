@@ -10,7 +10,7 @@ A small GNSS-disciplined 10 MHz frequency reference and precision time server fo
 
 <p align="center">
   <img width="600" alt="HamREF proto-1 PCB (3D view from KiCad)" src="docs/images/HamREF%20proto-1%20PCB.png" /><br>
-  <em>Proto-1 bring-up board (v0.1): 4-layer, 100 × 100 mm, 3D view from KiCad. Design files in <a href="hardware/proto-v0.1/"><code>hardware/proto-v0.1/</code></a>.</em>
+  <em>Proto-1 bring-up board (v0.1): 4-layer, 100 × 80 mm (fits the Fischer AKG 105.26 case grooves), 3D view from KiCad. Design files in <a href="hardware/proto-v0.1/"><code>hardware/proto-v0.1/</code></a>.</em>
 </p>
 
 ## What this is

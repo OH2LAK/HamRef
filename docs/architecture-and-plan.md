@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.17)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.18)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -58,7 +58,7 @@ Konseptikuvat (mittasuhteet oikein datalehden mukaan):
 ### Prototyypin OLED-moduuli (tilattu 2026-10-14)
 Prototyyppeihin tilattu 5 kpl 0.91" 128×32 I2C OLED -moduuleja (Yeluft, valkoinen, nastat esijuotettu). Tiedot myyntisivun kuvista (`docs/datasheets/OLED_0.91_I2C_proto/`; kuvat ovat myyjän, ei virallinen datalehti — varmista mitat kaliipereilla kun moduulit saapuvat):
 - **Mitat:** piirilevy **38,00 × 12,00 mm** (levyn korkeus 11,50 mm); lasi 30,00 mm pitkä ja päättyy 3,00 mm:n päähän levyn oikeasta reunasta; **aktiivinen alue 22,38 × 5,58 mm**, alkaa n. 7,1 mm levyn vasemmasta reunasta (8,52 mm oikeasta reunasta) ja n. 2,43 mm levyn yläreunasta. FPC-taittoalue oikeassa päässä.
-- **Ei kiinnitysreikiä** — kiinnitys etupaneeliin liimaamalla/kehyksellä/pidikkeellä, ei ruuveilla.
+- **Ei kiinnitysreikiä** — kiinnitys etupaneeliin liimaamalla/kehyksellä/pidikkeellä, ei ruuveilla. (Proto-PCB: levy liukuu kotelon uriin, ei reikiä.)
 - **Liitäntä:** 4 reikää/juotospadia 2,54 mm:n välein vasemmassa päässä, järjestys **GND (neliöpadi), VCC, SCL, SDA**. Nastalista on esijuotettu; poistettavissa tai korvattavissa johdoilla.
 - **Elektroniikka:** SSD1306-luokan ohjain (ruudulla "091OLED"), moduulilla XC6206 3,3 V:n LDO → **VCC 3,3–5 V**, I2C-pull-upit 4,7 kΩ moduulin 3,3 V:iin (SCL, SDA), reset-RC + diodi. Käytä Pico 2:n 3V3(OUT):a.
 - **I2C-osoite:** ei näy kuvissa (todennäköisesti 0x3C) — varmista I2C-skannauksella.
@@ -318,7 +318,7 @@ KiCad 7 -projekti on kansiossa `hardware/proto-v0.1/` (hierarkia Power / GNSS / 
 
 Muutokset GPIO-jakoon: GP16 = OCXO_FLT (TPS2065C:n vikalippu). Spare: GP17–GP20 (J SPARE).
 
-**PCB v0.1 generoitu ja reititetty (2026-10-14):** `hardware/proto-v0.1/hamref_proto_v0_1.kicad_pcb`, 100 × 100 mm, 4 kerrosta, kaikki osat ylhäällä, In1 = GND-taso. RP2350-Plus-jalanjälki on varmennettu Waveshaaren mittapiirrosta ja Raspberry Pin Pico 2 -jalanjälkeä (MIT) vasten. Reititys Freerouting 1.9.0:lla (2.1.0 kaatuu), DRC (KiCad 7.0.11): 0 kytkemätöntä, 0 clearance-virhettä. Ks. `docs/hardware/proto-v0.1-schematic-plan.md`, osio "PCB v0.1 (layout)". Uudelleengenerointi: `hardware/tools/make_all.sh`.
+**PCB v0.1 generoitu ja reititetty (2026-10-14):** `hardware/proto-v0.1/hamref_proto_v0_1.kicad_pcb`, 100 × 80 mm (päivitetty v0.18), 4 kerrosta, kaikki osat ylhäällä, In1 = GND-taso. RP2350-Plus-jalanjälki on varmennettu Waveshaaren mittapiirrosta ja Raspberry Pin Pico 2 -jalanjälkeä (MIT) vasten. Reititys Freerouting 1.9.0:lla (2.1.0 kaatuu), DRC (KiCad 7.0.11): 0 kytkemätöntä, 0 clearance-virhettä. Ks. `docs/hardware/proto-v0.1-schematic-plan.md`, osio "PCB v0.1 (layout)". Uudelleengenerointi: `hardware/tools/make_all.sh`.
 
 **Silkki ja 3D (2026-10-14, v0.17):** logo (HamREF by OH2LAK + satelliitti, vektoroitu kotelon mockupista) lisätty silkkiin, tunnisteet siivottu (`silk_pass.py`; DRC ilman silkkivaroituksia) ja 3D-mallipolut korjattu KiCad 10:lle (`${KICAD10_3DMODEL_DIR}`, .step). OCXO:lle ja RP2350-Plus-moduulille on laatikkomallit.
 
@@ -385,3 +385,5 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 - 100 mm eurokortin todellinen käytettävä leveys AKG 105.26 -profiilin sisällä (kiskourat vievät osan 105 mm:stä) — mitattava/varmistettava ennen PCB-ääriviivan lyömistä lukkoon.
 - Takapaneelin liitinasettelu (SMA + 3×BNC + USB-C 105 mm:n leveydellä) — mahtuu laskennallisesti hyvin, mutta tarkka sijoittelu tarkentuu mekaniikkasuunnittelussa.
 - GPSDO- ja NTP-tilaledien tarkka väri-/vilkkulogiikka määritellään firmwaren suunnittelussa.
+
+**Kotelosovitus 100 × 80 mm (2026-10-14, v0.18):** kotelo Fischer AKG 105.26 (ulkomitat 105 mm leveä, 26 mm korkea, sisäkorkeus 22 mm, syvyys 80 mm; levy liukuu uriin, vapaa leveys 98 mm, tilaa levyn päällä 22 − 5 − 1,8 = 15,2 mm ja alla 5 mm). Levy pienennetty 100 × 100 → 100 × 80 mm, kulmat R1,5 mm, kiinnitysreiät poistettu. Pitkien sivureunojen 1 mm kaistat ovat maskaamatonta GND-kuparia (F.Cu + B.Cu, maaviat 3 mm välein) hyvää maadoitusta varten koteloon; muu komponentti/pad-alue ≥1 mm uran sisäpuolella (moduulin padit ≥3 mm 98 mm:n rajasta). Takapaneelin liittimet vaihdettu vaakamalleihin (TE 1478035 BNC x3, Amphenol 901-143 SMA), koska pystyliittimet olisivat liian korkeita; liittimien origo 7,6 mm (BNC) / 4,5 mm (SMA) levyn reunasta, runko ja sovitin työntyvät takalevyn läpi. DRC: 0 reitittämätöntä, ei klirenssivirheitä; huomautukset: 1 silk_over_copper, 1 courtyard-päällekkäisyys (J3/U3). **Avoimet:** (1) TE 1478035:n ja Amphenol 901-143:n todellinen korkeus (15,2 mm raja) ja etureunan sijainti takalevyyn nähden varmistettava datalehdestä; (2) moduulin USB-C ulottuu 0,91 mm moduulilevyn alle: tarkista tarvitaanko lovi/vapaa-alue; (3) pinniriviot ~8,5 mm + pistokkeet: johdot sivusta; (4) osa liitinsilkkitekstejä (J3, JP1–JP3 yms.) ei mahtunut tiiviimpään asetteluun; (5) reititys on epädeterministinen: aja route.sh uudelleen tarvittaessa.

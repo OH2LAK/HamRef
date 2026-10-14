@@ -34,7 +34,8 @@ python3 "$HERE/silk_pass.py" routed.kicad_pcb routed.kicad_pcb      # labels + d
 python3 "$HERE/gnd_finish.py" routed.kicad_pcb routed.kicad_pcb     # then GND pours, edge via fence and stitching (avoids the silk text)
 python3 - <<'PY'
 import pcbnew,re,collections
-b=pcbnew.LoadBoard('routed.kicad_pcb'); pcbnew.WriteDRCReport(b,'drc.rpt',pcbnew.EDA_UNITS_MILLIMETRES,True)
+import shutil; shutil.copy('routed.kicad_pcb','drc_tmp.kicad_pcb'); shutil.copy('hamref_proto_v0_1.kicad_pro','drc_tmp.kicad_pro')   # DRC rules come from the project file
+b=pcbnew.LoadBoard('drc_tmp.kicad_pcb'); pcbnew.WriteDRCReport(b,'drc.rpt',pcbnew.EDA_UNITS_MILLIMETRES,True)
 t=open('drc.rpt').read()
 c=collections.Counter(re.findall(r'^\[(\w+)\]',t,re.M)); print(dict(c))
 PY

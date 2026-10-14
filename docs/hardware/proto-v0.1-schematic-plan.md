@@ -6,13 +6,13 @@ Tila: **v0.1 luonnos**, ei vielä layoutia. Kaaviot käyttävät global label -k
 
 ## Tarkistukset tehty
 
-- Nettilista (`kicad-cli sch export netlist`) latautuu: 113 komponenttia, 85 nettiä.
+- Nettilista (`kicad-cli sch export netlist`) latautuu: 109 komponenttia, 85 nettiä.
 - ERC-lite (oma tarkistus): ei yhden solmun nettejä, ei kytkemättömiä käyttöpinnejä, kaikki jalanjäljet löytyvät KiCad-kirjastoista (paitsi oma RP2350-Plus, joka on projektissa).
 - Pinninumerot tarkistettu symbolikirjastoista; LEA-M8S, Si5351C, AD5693R, TPS2065C, LP5907, 74xG-sirut vastaavat datasheet-tietoja.
 
 ## Sivu: Power
 
-5V_USB (moduulin VBUS) tai 5V_EXT valitaan jumpperilla JP1 -> 5V_MAIN. TVS (SMBJ5.0A), Schottky moduulin VSYS:lle, TPS2065C OCXO:n virtakytkimenä (EN = GP21, pakko-päälle JP2), LP5907-3.3 puhtaana 3V3_GNSS:nä, ferriittisuodatettu 5V_DAC, 5V-mittaus ADC:lle (GP26), testipisteet ja 4 kiinnitysreikää.
+5V_USB (moduulin VBUS) tai 5V_EXT valitaan jumpperilla JP1 -> 5V_MAIN. TVS (SMBJ5.0A), Schottky moduulin VSYS:lle, TPS2065C OCXO:n virtakytkimenä (EN = GP21, pakko-päälle JP2), LP5907-3.3 puhtaana 3V3_GNSS:nä, ferriittisuodatettu 5V_DAC, 5V-mittaus ADC:lle (GP26), testipisteet. Ei kiinnitysreikiä: levy liukuu kotelon uriin.
 
 | Viite | Osa | Arvo | Jalanjälki | MPN | Pinnit → netit |
 |---|---|---|---|---|---|
@@ -46,10 +46,6 @@ Tila: **v0.1 luonnos**, ei vielä layoutia. Kaaviot käyttävät global label -k
 | TP4 | TestPoint | 3V3 | TestPoint:TestPoint_Pad_D1.5mm |  | 1→3V3 |
 | TP5 | TestPoint | 5V_DAC | TestPoint:TestPoint_Pad_D1.5mm |  | 1→5V_DAC |
 | TP6 | TestPoint | GND | TestPoint:TestPoint_Pad_D1.5mm |  | 1→GND |
-| H1 | MountingHole | MountingHole_M3 | MountingHole:MountingHole_3.2mm_M3 |  |  |
-| H2 | MountingHole | MountingHole_M3 | MountingHole:MountingHole_3.2mm_M3 |  |  |
-| H3 | MountingHole | MountingHole_M3 | MountingHole:MountingHole_3.2mm_M3 |  |  |
-| H4 | MountingHole | MountingHole_M3 | MountingHole:MountingHole_3.2mm_M3 |  |  |
 
 ## Sivu: GNSS
 
@@ -58,7 +54,7 @@ LEA-M8S 3V3_GNSS:llä. UART GP0/GP1, RESET (GP9, ei ajeta ylös), EXTINT0 (GP10)
 | Viite | Osa | Arvo | Jalanjälki | MPN | Pinnit → netit |
 |---|---|---|---|---|---|
 | U3 | LEA-M8S | LEA-M8S-0 | RF_GPS:ublox_LEA | LEA-M8S-0-10 | 3(TXD)→GNSS_TXD; 4(RXD)→GNSS_RXD; 6(VCC)→3V3_GNSS; 7(GND)→GND; 10(~{RESET})→GNSS_RESET; 11(V_BCKP)→3V3_GNSS; 13(GND)→GND; 14(GND)→GND; 15(GND)→GND; 16(RF_IN)→GNSS_RF; 17(GND)→GND; 18(VCC_RF)→VCC_RF; 19(V_ANT)→V_ANT; 24(VDD_USB)→GND; 27(EXTINT0)→GNSS_EXTINT; 28(TIMEPULSE)→GNSS_TIMEPULSE _RESET_N: drive low or hi-Z only. SDA/SCL (DDC) unused. USB unused._ |
-| J2 | Conn_Coaxial | SMA ANT | Connector_Coaxial:SMA_Amphenol_901-144_Vertical | 901-144 | 1(In)→GNSS_RF; 2(Ext)→GND _rear panel; verify edge-mount vs vertical_ |
+| J2 | Conn_Coaxial | SMA ANT | Connector_Coaxial:SMA_Amphenol_901-143_Horizontal | 901-143 | 1(In)→GNSS_RF; 2(Ext)→GND _rear panel; verify edge-mount vs vertical_ |
 | R5 | R | 10 | Resistor_SMD:R_0402_1005Metric |  | 1→VCC_RF; 2→V_ANT |
 | C12 | C | 10nF | Capacitor_SMD:C_0402_1005Metric |  | 1→V_ANT; 2→GND |
 | C13 | C | 100nF | Capacitor_SMD:C_0402_1005Metric |  | 1→VCC_RF; 2→GND |
@@ -104,12 +100,12 @@ CTI OSC5A2B02 (5V_OCXO), EFC: AD5693R (I2C1 0x4C, 5V_DAC) -> 2x (4.7k + 10uF) ->
 | U7 | 74AHCT1G125 | 74AHCT1G125 | Package_TO_SOT_SMD:SOT-23-5 | SN74AHCT1G125DBVR | 1→GND; 2→OCXO_OUT_RAW; 3(GND)→GND; 4→REF_BUF; 5(VCC)→5V_OCXO _clean REF OUT path; /OE tied low_ |
 | R15 | R | 47 | Resistor_SMD:R_0402_1005Metric |  | 1→REF_BUF; 2→REF_OUT |
 | C27 | C | 100nF | Capacitor_SMD:C_0402_1005Metric |  | 1→5V_OCXO; 2→GND |
-| J3 | Conn_Coaxial | BNC REF OUT | Connector_Coaxial:BNC_Amphenol_031-5539_Vertical | 031-5539 | 1(In)→REF_OUT; 2(Ext)→GND _rear panel_ |
+| J3 | Conn_Coaxial | BNC REF OUT | Connector_Coaxial:BNC_TEConnectivity_1478035_Horizontal | 1-1478035-0 | 1(In)→REF_OUT; 2(Ext)→GND _rear panel_ |
 | JP3 | Conn_01x03 | JP3 1PPS SRC (1-2 GNSS, 2-3 MCU) | Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical |  | 1(Pin_1)→PPS_GNSS; 2(Pin_2)→PPS_SEL; 3(Pin_3)→PPS_MCU |
 | U8 | 74LVC1G125 | 74LVC1G125 | Package_TO_SOT_SMD:SOT-23-5 | SN74LVC1G125DBVR | 1→GND; 2→PPS_SEL; 3(GND)→GND; 4→PPS_BUF; 5(VCC)→3V3 |
 | R16 | R | 47 | Resistor_SMD:R_0402_1005Metric |  | 1→PPS_BUF; 2→PPS_OUT |
 | C28 | C | 100nF | Capacitor_SMD:C_0402_1005Metric |  | 1→3V3; 2→GND |
-| J4 | Conn_Coaxial | BNC 1PPS OUT | Connector_Coaxial:BNC_Amphenol_031-5539_Vertical | 031-5539 | 1(In)→PPS_OUT; 2(Ext)→GND _rear panel_ |
+| J4 | Conn_Coaxial | BNC 1PPS OUT | Connector_Coaxial:BNC_TEConnectivity_1478035_Horizontal | 1-1478035-0 | 1(In)→PPS_OUT; 2(Ext)→GND _rear panel_ |
 | U9 | Si5351C-B-GM | Si5351C-B-GM | Package_DFN_QFN:QFN-20-1EP_4x4mm_P0.5mm_EP2.6x2.6mm | SI5351C-B-GM | 1(XA)→XA_DNP; 2(XB)→XB_DNP; 3(INTR)→SYN_INTR; 4(SCL)→I2C0_SCL; 5(SDA)→I2C0_SDA; 6(CLKIN)→OCXO_10M_3V3; 7(OEB)→AUX_OEB; 10(VDDOB)→3V3_SYN; 11(VDDOA)→3V3_SYN; 13(CLK0)→AUX_CLK0; 14(VDDOD)→3V3_SYN; 18(VDDOC)→3V3_SYN; 20(VDD)→3V3_SYN; 21(GND)→GND _I2C 0x60. XA/XB wired to DNP crystal Y1 only; with CLKIN used they stay open. Verify EP size._ |
 | FB2 | FerriteBead | BLM18PG221SN1D | Inductor_SMD:L_0603_1608Metric | BLM18PG221SN1D | 1→3V3; 2→3V3_SYN |
 | C29 | C | 10uF 10V | Capacitor_SMD:C_0805_2012Metric |  | 1→3V3_SYN; 2→GND |
@@ -122,7 +118,7 @@ CTI OSC5A2B02 (5V_OCXO), EFC: AD5693R (I2C1 0x4C, 5V_DAC) -> 2x (4.7k + 10uF) ->
 | R18 | R | 10k | Resistor_SMD:R_0402_1005Metric |  | 1→SYN_INTR; 2→3V3 |
 | Y1 **DNP** | Crystal_GND24 | 25MHz | Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm |  | 1→XA_DNP; 2→GND; 3(3)→XB_DNP; 4(4)→GND _DNP; footprint for optional 25 MHz crystal (XA/XB would need connecting)_ |
 | R19 | R | 47 | Resistor_SMD:R_0402_1005Metric |  | 1→AUX_CLK0; 2→AUX_OUT |
-| J5 | Conn_Coaxial | BNC AUX OUT | Connector_Coaxial:BNC_Amphenol_031-5539_Vertical | 031-5539 | 1(In)→AUX_OUT; 2(Ext)→GND _rear panel; 3.3V CMOS, filter for LNB/Pluto TBD_ |
+| J5 | Conn_Coaxial | BNC AUX OUT | Connector_Coaxial:BNC_TEConnectivity_1478035_Horizontal | 1-1478035-0 | 1(In)→AUX_OUT; 2(Ext)→GND _rear panel; 3.3V CMOS, filter for LNB/Pluto TBD_ |
 | TP12 | TestPoint | AUX_OUT | TestPoint:TestPoint_Pad_D1.5mm |  | 1→AUX_OUT |
 | TP13 | TestPoint | PPS_OUT | TestPoint:TestPoint_Pad_D1.5mm |  | 1→PPS_OUT |
 
@@ -168,20 +164,18 @@ RP2350-Plus (omat symboli ja jalanjälki), I2C0-pullupit, OLED-, enkooderi- ja L
 
 Tiedosto: `hardware/proto-v0.1/hamref_proto_v0_1.kicad_pcb` (generoitu: `hardware/tools/build_pcb.py` + Freerouting 1.9.0).
 
-- 100 × 100 mm, 4 kerrosta: F.Cu (osat + signaalit), In1.Cu = yhtenäinen GND-taso, In2.Cu = signaali-/virtareititys, B.Cu = signaalit + GND-valu. Kaikki osat ylhäällä. GND-täyttö (pour) on F.Cu-, In1.Cu- ja B.Cu-kerroksilla, lämpökytkennöillä (thermal relief, jotta pinnit ovat käsin juotettavissa); GNSS_RF-johdon ympärillä F.Cu:n täyttö on estetty (50 ohmin mikroliuska, ei koplanaarimaata). Levyn reunalla on maavia-aita (GND-läpiviennit ~3 mm:n välein 1 mm:n päässä reunasta, aukot liitinten, testipisteiden ja johtojen kohdalla) ja täytön läpi 6 mm:n pistoviaruudukko (`gnd_finish.py`).
+- 100 × 80 mm (kotelo Fischer AKG 105.26, syvyys 80 mm), R1,5 mm kulmapyöristys, ei kiinnitysreikiä: levy liukuu kotelon uriin (vapaa leveys 98 mm; komponentit ja padit ≥1 mm uraa varten varatun reunan sisäpuolella). Pitkät sivureunat (1 mm) ovat maskaamatonta GND-kuparia (F.Cu + B.Cu, maaviat) joka antaa maadoituksen koteloon. Komponenttikorkeus levyn päällä enintään 15,2 mm (22 − 5 − 1,8), alla 5 mm. Takapaneelin liittimet ovat vaakaliittimiä (TE 1478035 BNC, Amphenol 901-143 SMA). 4 kerrosta: F.Cu (osat + signaalit), In1.Cu = yhtenäinen GND-taso, In2.Cu = signaali-/virtareititys, B.Cu = signaalit + GND-valu. Kaikki osat ylhäällä.
 - RP2350-Plus juotetaan castellated-padeilla oikeaan reunaan (USB-C ylöspäin). Moduulin rungon alla on kielletty-alue (ei johtoja/läpivientejä F.Cu:lla).
 - Takapaneelirivi ylhäällä: SMA (GNSS), BNC REF OUT, BNC 1PPS OUT, BNC AUX OUT. Käyttöliittymäpinnit (OLED, enkooderi, LED, reset, spare) ja testipisteet alareunassa.
 - LEA-M8S kierretty niin, että RF_IN (pinni 16) on lähimpänä SMA:ta; GNSS_RF on lukittu 0.37 mm:n johto F.Cu:lla In1-GND-tason päällä (50 ohm arvio, 0.21 mm prepreg – tarkista valmistajan pinoamasta).
 - Virtaverkot (5V_MAIN, 5V_OCXO, 3V3, 3V3_GNSS, 5V_DAC, VSYS, VBUS_MOD) reititetty 0.5 mm:llä, muut 0.2 mm; clearance 0.2 mm, läpivienti 0.6/0.3 mm.
 - Jokaisella SMD-GND-padilla on oma läpivienti In1-maatasolle; Si5351C:n EP:ssä 4 lämpö-/maaläpivientiä.
-- DRC (KiCad 7.0.11, `WriteDRCReport`): 0 kytkemätöntä, 0 clearance-virhettä, ei silkkipäällekkäisyyksiä. Jäljellä vain yksi `silk_over_copper` (RP2350-Plus-jalanjäljen ääriviiva castellated-padien kohdalla) ja `lib_footprint_issues` (projektin omat jalanjäljet).
-- Silkki: logo "HamREF by OH2LAK" + satelliitti on vektoroitu kotelon mockup-kuvasta (`hardware/tools/make_logo.py` → `logo/hamref_logo.json`) ja sijoitettu levyn vasempaan alakulmaan. Tunnisteet (`silk_pass.py`) asetetaan reitityksen jälkeen vapaaseen kohtaan (0,8 mm); tiheimmän alueen tunnisteet (C30, C35, R4, R9, R10, R14, R17, R18, R19, FB2 ym.) ovat F.Fab-kerroksella. Liittimille, jumppereille ja testipisteille on silkkitekstit: toiminto, pinnien nimet (J1, J6–J11, JP2) sekä JP1:n ja JP3:n asennot; testipisteiden verkkonimet lyhenteinä (TP2 5V_OX = 5V_OCXO, TP3 3V3_GN = 3V3_GNSS, TP7/8 GTXD/GRXD = GNSS_TXD/RXD, TP9 PPS_G = PPS_GNSS, TP11 OCXO = OCXO_OUT_RAW, TP14 FLT = GP16_OCXO_FLT). Teksti lisätään reitityksen jälkeen (`silk_pass.py`). OCXO:n "estimated"-varoitus on yhtenä tekstinä OCXO:n ääriviivan sisällä.
-- 3D-mallit: KiCadin vakiojalanjäljet viittaavat 3D-malleihin, ja polut kirjoitetaan muotoon `${KICAD10_3DMODEL_DIR}/...step` (muuttujat `MODEL_VAR`, `MODEL_EXT` ympäristömuuttujina `make_all.sh`:lle). OCXO:lle ja RP2350-Plus-moduulille on yksinkertaiset laatikkomallit `hamref.3dshapes/` (mitat arvioita).
+- DRC (KiCad 7.0.11, `WriteDRCReport`): 0 kytkemätöntä, 0 clearance-virhettä. Jäljellä vain silkkiin liittyviä huomautuksia (silk overlap / edge) ja `lib_footprint_issues` (projektin omat jalanjäljet).
 
 ### PCB:n avoimet kohdat
 
 1. **OCXO-jalanjälki on arvio** (pinnit ±10.16 mm ruudukossa). Mittaa oikea OSC5A2B02 ennen tilausta ja korjaa `OCXO_OSC5A2B02_EST.kicad_mod`; reititys on tehtävä uudelleen (`make_all.sh`).
 2. SMA- ja BNC-liittimet ovat pystymalleja (piirilevylle pystyyn). Kotelon takapaneeliin tarvitaan myöhemmin reunaan asennettavat mallit (v0.2).
-3. Sijoittelu on automaattinen: tarkista käsin RF-alue, OCXO:n ympäristö (lämpö!) ja GND-paluuvirrat.
+3. Sijoittelu on automaattinen: tarkista käsin RF-alue, OCXO:n ympäristö (lämpö!) ja GND-paluuvirrat. Silkki ja tunnisteet vaativat siivousta.
 4. Pinoama (50 ohm:n johdon leveys) ja viivakoko on tarkistettava valitun valmistajan (esim. JLCPCB 4-layer) impedanssilaskurilla.
 5. Gerberit ja pick-and-place eivät vielä ole mukana; tehdään kun layout on hyväksytty.

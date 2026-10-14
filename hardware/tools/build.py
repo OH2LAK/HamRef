@@ -18,7 +18,7 @@ FP = dict(
  h2='Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical', h3='Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical',
  h4='Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical', h5='Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical',
  h7='Connector_PinHeader_2.54mm:PinHeader_1x07_P2.54mm_Vertical',
- sma_c='Connector_Coaxial:SMA_Amphenol_901-144_Vertical', bnc='Connector_Coaxial:BNC_Amphenol_031-5539_Vertical',
+ sma_c='Connector_Coaxial:SMA_Amphenol_901-143_Horizontal', bnc='Connector_Coaxial:BNC_TEConnectivity_1478035_Horizontal',
  lea='RF_GPS:ublox_LEA', qfn20='Package_DFN_QFN:QFN-20-1EP_4x4mm_P0.5mm_EP2.6x2.6mm', msop10='Package_SO:MSOP-10_3x3mm_P0.5mm',
  xtal='Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm', ocxo='HamREF:OCXO_OSC5A2B02_EST',
 )
@@ -72,7 +72,7 @@ P.FB('5V_MAIN','5V_DAC'); P.C('10uF 10V','5V_DAC','GND','c8'); P.C('100nF','5V_D
 # ADC 5V monitor
 P.R('100k','5V_MAIN','ADC_5V'); P.R('100k','ADC_5V','GND'); P.C('100nF','ADC_5V','GND')
 for n in ['5V_MAIN','5V_OCXO','3V3_GNSS','3V3','5V_DAC','GND']: P.TP(n)
-for i in range(4): P.sh.add(ref('H'),'Mechanical','MountingHole','MountingHole_M3',30+i*30,260,pins={},footprint=FP['mh'])
+# no mounting holes: board slides into case grooves (AKG 105.26)
 
 # ===================== GNSS =====================
 N = S('GNSS','gnss.kicad_sch', 150, 40)
@@ -83,7 +83,7 @@ N.add(ref('U'),'RF_GPS','LEA-M8S','LEA-M8S-0',
   nc=('1','2','5','8','9','12','20','21','22','23','25','26'), fp=FP['lea'], xy=(60,100), mpn='LEA-M8S-0-10', mfr='u-blox',
   note='RESET_N: drive low or hi-Z only. SDA/SCL (DDC) unused. USB unused.')
 LEA = N.last
-N.add(ref('J'),'Connector','Conn_Coaxial','SMA ANT',{'1':'GNSS_RF','2':'GND'},FP['sma_c'],xy=(120,60),mpn='901-144',mfr='Amphenol',note='rear panel; verify edge-mount vs vertical')
+N.add(ref('J'),'Connector','Conn_Coaxial','SMA ANT',{'1':'GNSS_RF','2':'GND'},FP['sma_c'],xy=(120,60),mpn='901-143',mfr='Amphenol',note='rear panel; verify edge-mount vs vertical')
 N.set(LEA); N.R('10','VCC_RF','V_ANT'); N.C('10nF','V_ANT','GND'); N.C('100nF','VCC_RF','GND')
 N.C('4.7uF','3V3_GNSS','GND','c6'); N.C('100nF','3V3_GNSS','GND'); N.C('100nF','3V3_GNSS','GND')
 N.add(ref('U'),'74xGxx','74LVC1G17','74LVC1G17',{'2':'GNSS_TIMEPULSE','4':'PPS_GNSS','5':'3V3'},FP['sot5'],nc=('1',),mpn='SN74LVC1G17DBVR',mfr='TI')
@@ -117,12 +117,12 @@ K.R('33','OCXO_10M_BUF','OCXO_10M_3V3'); K.C('100nF','3V3','GND')
 # REF OUT buffer (5V_OCXO domain)
 K.add(ref('U'),'74xGxx','74AHCT1G125','74AHCT1G125',{'1':'GND','2':'OCXO_OUT_RAW','4':'REF_BUF','5':'5V_OCXO'},FP['sot5'],mpn='SN74AHCT1G125DBVR',mfr='TI',note='clean REF OUT path; /OE tied low')
 K.R('47','REF_BUF','REF_OUT'); K.C('100nF','5V_OCXO','GND')
-K.add(ref('J'),'Connector','Conn_Coaxial','BNC REF OUT',{'1':'REF_OUT','2':'GND'},FP['bnc'],mfr='Amphenol',mpn='031-5539',note='rear panel')
+K.add(ref('J'),'Connector','Conn_Coaxial','BNC REF OUT',{'1':'REF_OUT','2':'GND'},FP['bnc'],mfr='TE Connectivity',mpn='1-1478035-0',note='rear panel')
 # 1PPS OUT
 K.HDR(3, ['PPS_GNSS','PPS_SEL','PPS_MCU'], 'JP3 1PPS SRC (1-2 GNSS, 2-3 MCU)', 'h3', rf='JP')
 K.add(ref('U'),'74xGxx','74LVC1G125','74LVC1G125',{'1':'GND','2':'PPS_SEL','4':'PPS_BUF','5':'3V3'},FP['sot5'],mpn='SN74LVC1G125DBVR',mfr='TI')
 K.R('47','PPS_BUF','PPS_OUT'); K.C('100nF','3V3','GND')
-K.add(ref('J'),'Connector','Conn_Coaxial','BNC 1PPS OUT',{'1':'PPS_OUT','2':'GND'},FP['bnc'],mfr='Amphenol',mpn='031-5539',note='rear panel')
+K.add(ref('J'),'Connector','Conn_Coaxial','BNC 1PPS OUT',{'1':'PPS_OUT','2':'GND'},FP['bnc'],mfr='TE Connectivity',mpn='1-1478035-0',note='rear panel')
 # Si5351C
 K.add(ref('U'),'Oscillator','Si5351C-B-GM','Si5351C-B-GM',
   pins={'1':'XA_DNP','2':'XB_DNP','3':'SYN_INTR','4':'I2C0_SCL','5':'I2C0_SDA','6':'OCXO_10M_3V3','7':'AUX_OEB','10':'3V3_SYN','11':'3V3_SYN','13':'AUX_CLK0','14':'3V3_SYN','18':'3V3_SYN','20':'3V3_SYN','21':'GND'},
@@ -133,7 +133,7 @@ K.R('10k','AUX_OEB','3V3', note='outputs disabled at boot')
 K.R('10k','SYN_INTR','3V3')
 K.add(ref('Y'),'Device','Crystal_GND24','25MHz',{'1':'XA_DNP','2':'GND','3':'XB_DNP','4':'GND'},FP['xtal'],dnp=True,note='DNP; footprint for optional 25 MHz crystal (XA/XB would need connecting)')
 K.R('47','AUX_CLK0','AUX_OUT')
-K.add(ref('J'),'Connector','Conn_Coaxial','BNC AUX OUT',{'1':'AUX_OUT','2':'GND'},FP['bnc'],mfr='Amphenol',mpn='031-5539',note='rear panel; 3.3V CMOS, filter for LNB/Pluto TBD')
+K.add(ref('J'),'Connector','Conn_Coaxial','BNC AUX OUT',{'1':'AUX_OUT','2':'GND'},FP['bnc'],mfr='TE Connectivity',mpn='1-1478035-0',note='rear panel; 3.3V CMOS, filter for LNB/Pluto TBD')
 K.TP('AUX_OUT'); K.TP('PPS_OUT')
 
 # ===================== MCU & UI =====================
@@ -161,6 +161,8 @@ g.write()
 import shutil
 shutil.copytree(os.path.join(HERE,'fplib','hamref.pretty'), OUT+'/hamref.pretty', dirs_exist_ok=True)
 open(OUT+'/fp-lib-table','w').write('(fp_lib_table\n  (version 7)\n  (lib (name "HamREF")(type "KiCad")(uri "${KIPRJMOD}/hamref.pretty")(options "")(descr "HamREF project footprints"))\n)\n')
-open(OUT+'/hamref_proto_v0_1.kicad_pro','w').write(json.dumps({'meta':{'filename':'hamref_proto_v0_1.kicad_pro','version':1},'sheets':[],'text_variables':{}},indent=2))
+open(OUT+'/hamref_proto_v0_1.kicad_pro','w').write(json.dumps({'meta':{'filename':'hamref_proto_v0_1.kicad_pro','version':1},'sheets':[],'text_variables':{},
+    # copper may run to the board edge: the case-groove strips are bare GND copper by design
+    'board':{'design_settings':{'rules':{'min_copper_edge_clearance':0.0,'min_hole_clearance':0.25,'min_clearance':0.15}}}},indent=2))
 json.dump([dict(p) for s in g.sheets for p in s.parts], open(OUT+'/parts.json','w'), indent=1)
 print('parts:', sum(len(s.parts) for s in g.sheets))
