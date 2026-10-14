@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.10)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.11)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -105,6 +105,29 @@ Kriteerit: 10 MHz, 5 V syöttö, analoginen EFC, korkeus selvästi alle 22 mm, h
 - **Hinta:** uusien osien hinta (noin 90 €) on suuri rakennussarjaan; surplus on selvästi halvempaa, mutta saatavuus ja mitat vaihtelevat.
 
 **Suositus:** protoon AOCJY1A (pieni, hyvin dokumentoitu, uusi, DIP-14-pistokesovitin helppo) ja rinnalle yksi surplus-OCXO halvempana vertailuna. Lopullinen valinta tehdään kun toimitusaika (26–27 vk) ja sarjan hinta on selvillä; osan 2 (5 V -versio) hinta ja saatavuus tarkistettava Digi-Keyltä.
+
+### Valittu suunta: CTI OSC5A2B02 (päätös 2026-10-14)
+
+Erik: edetään CTI OSC5A2B02:lla. Perusteet: halpa (käytettynä noin 3–15 € kappale), 5 V syöttö, HCMOS-neliöaalto ulos, mahtuu koteloon (noin 26 × 26 × 12–13 mm), ja sitä käytetään laajasti harrastajaprojekteissa (mm. VA3TO:n OCXO-kortti, time-nuts-testit, halvat kiinalaiset OCXO-moduulit).
+
+| Ominaisuus | Arvo | Lähde |
+|---|---|---|
+| Syöttö | 5 V | eBay-listaukset, VA3TO-kortti |
+| Virta | käynnistys alle 600 mA (valmistaja ja Bliley-vertailu: noin 600 mA 3–4 min), vakio alle 250 mA (noin 200–250 mA) | CTI-datalehti (VA3TO:n lainaus), tonyplaza-taulukko (heating 380–490 mA, warm 250 mA) |
+| Lähtö | HCMOS-neliö, Voh yli 4,5 V, Vol alle 0,5 V, 15 pF, 45–55 % | VA3TO |
+| EFC | 0…+4,0 V, positiivinen kulma, tuloimpedanssi yli 100 kΩ; 10 MHz noin 2,0 V:ssa; herkkyys arviolta 5–10 Hz / 0,5 V (±1…±2 ppm), epävarma | VA3TO, time-nuts-ketju |
+| Stabiilisuus | parempi kuin ±10 ppb (25 °C), vanheneminen alle 0,5 ppb/vrk ja alle 100 ppb ensimmäisenä vuotena (uusi osa) | VA3TO |
+| Lämpeneminen | ±100 ppb 5 minuutissa; kunnollinen mittaus vaatii noin 24 h | VA3TO, time-nuts |
+| Koko | noin 26 × 26 × 12–13 mm | eBay-listaukset |
+| Saatavuus | eBay (Shenzhen): listaus "5PC CETC CTI OSC5A2B02" 15,99 $ + 15 $ posti (näyttää olevan 5 kpl:n erä, vahvista); käytettyjä, usein purettu tukiasemista | eBay |
+
+**Huomioita:**
+- **Käytetty/purettu osa:** useimmat tarjolla olevat yksilöt ovat 20+ vuotta vanhoja tukiasemaosia. Time-nuts- ja EEVblog-käyttäjät raportoivat osan olevan useita hertsejä pielessä toimitettaessa ja yhden lämmittimen hajonneen kuukausien jälkeen. Osta vähintään 3–5 kpl ja testaa; sarjassa tämä on riski.
+- **EFC-alue 0–4 V:** DAC:n ulostulo rajataan 0–4 V:iin (esim. 4,096 V:n referenssi tai jakaja) ja pidetään matalakohinaisena ja lämpötilakestävänä. Resoluutio: arviolla 40 Hz:n kokonaisalue 4 V:lla → 12 bitillä noin 1 ppb, 16 bitillä noin 0,06 ppb. 16-bittinen DAC on edelleen suositus.
+- **Pinout:** modulin nastajako (Vref-, EFC-, Vcc-, GND-, ulostulo) vahvistetaan datalehdestä/mittaamalla ennen sovittimen suunnittelua (osan on raportoitu tarjoavan Vref-pinnin, mutta nimet ja numerot on varmistettava). Proto-PCB:lle OCXO:n pistokesovitin tai nastarivi.
+- **Virta:** käynnistysvirta noin 0,6 A + muu elektroniikka noin 0,15 A = noin 0,75 A → ylittää USB 2.0:n 500 mA:n. Load switch virrarajalla ja ulkoinen 5 V -syöttö protossa säilyvät vaatimuksina. Vakiotilassa kokonaisvirta noin 0,4 A mahtuu USB:hen.
+- **Ulostulon taso:** 5 V:n HCMOS → puskuri 3,3 V:n logiikalla (5 V -toleranssi) MCU:lle (GP7); REF OUT BNC:lle sarjavastus 50 Ω ja tarvittaessa suodatus.
+- Abracon AOCJY1A/AOCJY jäävät vaihtoehdoiksi, jos halutaan uusi, speksattu osa korkeammalla hinnalla.
 
 ## USB: virta + kellopalvelu samasta liitännästä — kyllä, toimiva ratkaisu
 
@@ -283,7 +306,7 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 7. **Kalibrointi ja verifiointi** — 10 MHz verrataan referenssitaajuuslaskuriin/toiseen GPSDO:hon, NTP/PPS-tarkkuus tarkistetaan (chronyc tracking), pitkän ajan holdover-testi, OCXO:n lämmitysvirtapiikin mittaus USB-syötöstä.
 
 ## Avoimet kysymykset / riskit seuraavaan kierrokseen
-- **OCXO:n fyysinen korkeus AKG 105.26:n 26 mm sisätilaan** — tärkein avoin riski. Moni 5V surplus-OCXO (Trimble 65256, IsoTemp 143-141 ym.) on fyysisesti liian korkea/iso matalaan koteloon; OCXO-valinta pitää tehdä sekä sähköisin että mekaanisin perustein.
+- **OCXO:n fyysinen korkeus AKG 105.26:n 26 mm sisätilaan** — ratkaistu valinnalla CTI OSC5A2B02 (noin 12–13 mm); vahvista mitta ja nastajako kappaleesta. Moni 5V surplus-OCXO (Trimble 65256, IsoTemp 143-141 ym.) on fyysisesti liian korkea/iso matalaan koteloon; OCXO-valinta pitää tehdä sekä sähköisin että mekaanisin perustein.
 - Tarkka OCXO-osavalinta ja hankintakanava (surplus eBay vs. uusi vastaava) — hinta/saatavuus/koko selvitettävä ennen tilausta.
 - USB-virransyötön mitoitus: mitataan OCXO:n todellinen lämmitysvirtapiikki ja päätetään puskurointi + tarvittava USB-lähteen virrankesto (itsevoimainen hubi / USB-C PD).
 - USB-kellopalvelun toteutustapa v1:ssä: CDC-ACM+host-apuohjelma (nopein) vs. virtuaalinen DCD-PPS vs. USB-Ethernet+oma NTP (valitaan Vaiheessa 6, ei blokkaa PCB-suunnittelua).
