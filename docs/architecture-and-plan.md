@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.11)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.12)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -108,25 +108,34 @@ Kriteerit: 10 MHz, 5 V syöttö, analoginen EFC, korkeus selvästi alle 22 mm, h
 
 ### Valittu suunta: CTI OSC5A2B02 (päätös 2026-10-14)
 
-Erik: edetään CTI OSC5A2B02:lla. Perusteet: halpa (käytettynä noin 3–15 € kappale), 5 V syöttö, HCMOS-neliöaalto ulos, mahtuu koteloon (noin 26 × 26 × 12–13 mm), ja sitä käytetään laajasti harrastajaprojekteissa (mm. VA3TO:n OCXO-kortti, time-nuts-testit, halvat kiinalaiset OCXO-moduulit).
+Erik: edetään CTI OSC5A2B02:lla. Perusteet: halpa (käytettynä noin 3–15 € kappale), 5 V syöttö, HCMOS-neliöaalto ulos, mahtuu koteloon ja sitä käytetään laajasti harrastajaprojekteissa (mm. VA3TO:n OCXO-kortti, time-nuts-testit, halvat kiinalaiset OCXO-moduulit). Datalehti: `docs/datasheets/CTI_OSC5A2B02_10MHz_OCXO/` (täydennetty 2026-10-14, alla luvut siitä).
 
-| Ominaisuus | Arvo | Lähde |
-|---|---|---|
-| Syöttö | 5 V | eBay-listaukset, VA3TO-kortti |
-| Virta | käynnistys alle 600 mA (valmistaja ja Bliley-vertailu: noin 600 mA 3–4 min), vakio alle 250 mA (noin 200–250 mA) | CTI-datalehti (VA3TO:n lainaus), tonyplaza-taulukko (heating 380–490 mA, warm 250 mA) |
-| Lähtö | HCMOS-neliö, Voh yli 4,5 V, Vol alle 0,5 V, 15 pF, 45–55 % | VA3TO |
-| EFC | 0…+4,0 V, positiivinen kulma, tuloimpedanssi yli 100 kΩ; 10 MHz noin 2,0 V:ssa; herkkyys arviolta 5–10 Hz / 0,5 V (±1…±2 ppm), epävarma | VA3TO, time-nuts-ketju |
-| Stabiilisuus | parempi kuin ±10 ppb (25 °C), vanheneminen alle 0,5 ppb/vrk ja alle 100 ppb ensimmäisenä vuotena (uusi osa) | VA3TO |
-| Lämpeneminen | ±100 ppb 5 minuutissa; kunnollinen mittaus vaatii noin 24 h | VA3TO, time-nuts |
-| Koko | noin 26 × 26 × 12–13 mm | eBay-listaukset |
-| Saatavuus | eBay (Shenzhen): listaus "5PC CETC CTI OSC5A2B02" 15,99 $ + 15 $ posti (näyttää olevan 5 kpl:n erä, vahvista); käytettyjä, usein purettu tukiasemista | eBay |
+**Nastajako (alta katsottuna, 5 nastaa):** 1 = Out, 2 = GND, 3 = "Vref" (= EFC-ohjausjännitteen **tulo**, ei referenssilähtö), 4 = NC, 5 = Vcc. Tuloimpedanssi vähintään 100 kΩ.
+
+| Ominaisuus | Arvo (datalehti) |
+|---|---|
+| Syöttö | 5,0 V ±5 % |
+| Virta | käynnistys enintään 600 mA, vakiotilassa enintään 250 mA |
+| Lähtö | HCMOS, 15 pF; Voh vähintään 4,5 V, Vol enintään 0,5 V; nousu/laskuaika enintään 6 ns; pulssisuhde 45/55 % |
+| EFC-alue | 2,0 ± 2,0 V (0…4 V), positiivinen kulma, lineaarisuus alle ±10 %, modulaatiokaista yli 10 kHz |
+| Säätöalue (vedot) | Vc = 0 V: −2,0…−1,0 ppm; Vc = 2,0 V: −0,2…+0,2 ppm; Vc = 4,0 V: +1,0…+2,0 ppm (kokonaisalue noin 3–4 ppm = 30–40 Hz) |
+| Alkutaajuus | enintään ±200 ppb (Vc = 2,0 V, 25 °C, 15 min käynnistyksestä) |
+| Stabiilisuus | lämpötila enintään ±10 ppb (0…75 °C), syöttö ±5 % → enintään ±2 ppb, kuorma ±5 % → enintään ±2 ppb |
+| Vanheneminen | enintään 0,5 ppb/vrk (30 vrk jälkeen), 100 ppb ensimmäisenä vuotena, 0,4 ppm / 10 v |
+| Lyhytaikainen | enintään 0,05 ppb/s (1 h käynnistyksestä) |
+| Lämpeneminen | alle 5 min ±100 ppb:iin (Vc = 2,0 V, 25 °C) |
+| Vaihekohina | −80 dBc/Hz @ 1 Hz, −120 @ 10 Hz, −140 @ 100 Hz, −145 @ 1 kHz, −150 @ 10 kHz |
+| Lämpötila | 0…+75 °C toiminta, −40…+85 °C ääriarvo, varastointi −55…+105 °C |
+| Koko | 25,4 × 25,4 × 12,5 mm |
+| Saatavuus | eBay (Shenzhen) käytettyjä: listaus "5PC CETC CTI OSC5A2B02" 15,99 $ + 15 $ posti (näyttää 5 kpl:n erältä, vahvista); usein purettu tukiasemista |
 
 **Huomioita:**
-- **Käytetty/purettu osa:** useimmat tarjolla olevat yksilöt ovat 20+ vuotta vanhoja tukiasemaosia. Time-nuts- ja EEVblog-käyttäjät raportoivat osan olevan useita hertsejä pielessä toimitettaessa ja yhden lämmittimen hajonneen kuukausien jälkeen. Osta vähintään 3–5 kpl ja testaa; sarjassa tämä on riski.
-- **EFC-alue 0–4 V:** DAC:n ulostulo rajataan 0–4 V:iin (esim. 4,096 V:n referenssi tai jakaja) ja pidetään matalakohinaisena ja lämpötilakestävänä. Resoluutio: arviolla 40 Hz:n kokonaisalue 4 V:lla → 12 bitillä noin 1 ppb, 16 bitillä noin 0,06 ppb. 16-bittinen DAC on edelleen suositus.
-- **Pinout:** modulin nastajako (Vref-, EFC-, Vcc-, GND-, ulostulo) vahvistetaan datalehdestä/mittaamalla ennen sovittimen suunnittelua (osan on raportoitu tarjoavan Vref-pinnin, mutta nimet ja numerot on varmistettava). Proto-PCB:lle OCXO:n pistokesovitin tai nastarivi.
+- **Käytetty/purettu osa:** useimmat tarjolla olevat yksilöt ovat 20+ vuotta vanhoja tukiasemaosia. Time-nuts- ja EEVblog-käyttäjät raportoivat osan olevan useita hertsejä pielessä toimitettaessa ja yhden lämmittimen hajonneen kuukausien jälkeen. Osta vähintään 3–5 kpl ja testaa; sarjassa tämä on riski. Datalehden luvut koskevat uutta osaa.
+- **DAC ja EFC:** EFC-tulo on 0…4 V ja osa saa keskitaajuuden noin 2,0 V:ssa, joten DAC:n ulostulo rajataan 0…4 V:iin (esim. 4,096 V:n referenssi tai jakaja) ja tehdään matalakohinaiseksi ja lämpötilakestäväksi. Resoluutio: noin 4 ppm / 4096 ≈ 1 ppb 12 bitillä, noin 4 ppm / 65536 ≈ 0,06 ppb 16 bitillä. 16-bittinen DAC on edelleen suositus. Alkutaajuus ±200 ppb ja vanheneminen jäävät reilusti säätöalueen sisään, joten lukitus onnistuu pitkälle.
+- **Referenssipinniä ei ole:** nasta 3 on tulo, ei lähtö; EFC-jännite tulee kokonaan DAC:lta. Vaihtoehtoisesti keskipiste voidaan asettaa jakajalla/trimmerillä ja DAC:lla tehdä hienosäätö.
 - **Virta:** käynnistysvirta noin 0,6 A + muu elektroniikka noin 0,15 A = noin 0,75 A → ylittää USB 2.0:n 500 mA:n. Load switch virrarajalla ja ulkoinen 5 V -syöttö protossa säilyvät vaatimuksina. Vakiotilassa kokonaisvirta noin 0,4 A mahtuu USB:hen.
 - **Ulostulon taso:** 5 V:n HCMOS → puskuri 3,3 V:n logiikalla (5 V -toleranssi) MCU:lle (GP7); REF OUT BNC:lle sarjavastus 50 Ω ja tarvittaessa suodatus.
+- **Lämpötila:** toiminta-alue 0…+75 °C (ääriarvo −40…+85 °C); suljetun alumiinikotelon sisälämpötila OCXO:n ja muun elektroniikan lämmöllä on tarkistettava.
 - Abracon AOCJY1A/AOCJY jäävät vaihtoehdoiksi, jos halutaan uusi, speksattu osa korkeammalla hinnalla.
 
 ## USB: virta + kellopalvelu samasta liitännästä — kyllä, toimiva ratkaisu
@@ -306,7 +315,7 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 7. **Kalibrointi ja verifiointi** — 10 MHz verrataan referenssitaajuuslaskuriin/toiseen GPSDO:hon, NTP/PPS-tarkkuus tarkistetaan (chronyc tracking), pitkän ajan holdover-testi, OCXO:n lämmitysvirtapiikin mittaus USB-syötöstä.
 
 ## Avoimet kysymykset / riskit seuraavaan kierrokseen
-- **OCXO:n fyysinen korkeus AKG 105.26:n 26 mm sisätilaan** — ratkaistu valinnalla CTI OSC5A2B02 (noin 12–13 mm); vahvista mitta ja nastajako kappaleesta. Moni 5V surplus-OCXO (Trimble 65256, IsoTemp 143-141 ym.) on fyysisesti liian korkea/iso matalaan koteloon; OCXO-valinta pitää tehdä sekä sähköisin että mekaanisin perustein.
+- **OCXO:n fyysinen korkeus AKG 105.26:n 26 mm sisätilaan** — ratkaistu valinnalla CTI OSC5A2B02 (noin 12–13 mm); mitta 25,4 × 25,4 × 12,5 mm ja nastajako vahvistettu datalehdestä. Moni 5V surplus-OCXO (Trimble 65256, IsoTemp 143-141 ym.) on fyysisesti liian korkea/iso matalaan koteloon; OCXO-valinta pitää tehdä sekä sähköisin että mekaanisin perustein.
 - Tarkka OCXO-osavalinta ja hankintakanava (surplus eBay vs. uusi vastaava) — hinta/saatavuus/koko selvitettävä ennen tilausta.
 - USB-virransyötön mitoitus: mitataan OCXO:n todellinen lämmitysvirtapiikki ja päätetään puskurointi + tarvittava USB-lähteen virrankesto (itsevoimainen hubi / USB-C PD).
 - USB-kellopalvelun toteutustapa v1:ssä: CDC-ACM+host-apuohjelma (nopein) vs. virtuaalinen DCD-PPS vs. USB-Ethernet+oma NTP (valitaan Vaiheessa 6, ei blokkaa PCB-suunnittelua).
