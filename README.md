@@ -46,30 +46,12 @@ The 22 mm limit also constrains component height on the PCB (OCXO included) — 
 
 ## Architecture overview
 
-```
-Active GNSS antenna
-        |
-    LEA-M8S  --UART (UBX/NMEA)--> RP2350-Plus (RP2350A) <-- encoder (menu/control)
-        |TIMEPULSE (1PPS)                |
-        v                                |--I2C --> 0.91" 128x32 OLED
-   (fan out / buffer)                    |--GPIO --> RGB LED "GPSDO"
-        |                                |--GPIO --> RGB LED "NTP"
-        |                                |--I2C --> DAC --EFC--> OCXO (10 MHz, 5V)
-        |                                                              |
-        +--------------------------------+                             |
-                                          |<--freq. measurement (PIO)---+
-                                          |
-                                    USB-C (native, RP2350):
-                                    - powers the whole device (5V, host link)
-                                    - CDC-ACM: PPS/NMEA data -> host helper -> chrony SHM/PPS
-                                    - also carries parameter configuration
-                                          |
-                              1PPS OUT <-- buffer <-- LEA-M8S TIMEPULSE
-                              (BNC, rear panel)
+<p align="center">
+  <img width="900" alt="HamREF architecture block diagram" src="docs/images/HamREF-architecture.png" /><br>
+  <em>Block diagram (editable source: <a href="docs/images/HamREF-architecture.svg"><code>HamREF-architecture.svg</code></a>).</em>
+</p>
 
-                              REF OUT <-- buffer/distribution amp <-- OCXO
-                              (BNC, 50 ohm, rear panel)
-```
+The GNSS module's 1PPS (TIMEPULSE) disciplines the OCXO through the MCU: the RP2350 measures the 10 MHz against the PPS with PIO and steers the EFC through the DAC. REF OUT (10 MHz) comes from the OCXO itself, 1PPS OUT from the GNSS TIMEPULSE, and AUX OUT is a programmable output (Si5351C clocked from the OCXO).
 
 Key hardware decisions so far:
 
