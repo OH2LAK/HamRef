@@ -1,6 +1,6 @@
 (footprint "RP2350-Plus_Castellated" (version 20221018) (generator hamref)
   (layer "F.Cu")
-  (descr "Waveshare RP2350-Plus / Raspberry Pi Pico 2 compatible castellated module, 40 SMD pads. Pad geometry (rows at +-8.89 mm, pitch 2.54 mm, SMD pad 3.5x1.7 mm) taken from the official Raspberry Pi Pico 2 footprint rpi_pico2_smd_th in RPI-PVSA_R3-S1 (MIT, (c) Raspberry Pi Ltd). Verify module outline against Waveshare STEP.")
+  (descr "Waveshare RP2350-Plus / Raspberry Pi Pico 2 compatible castellated module, 40 SMD pads. Pad geometry (rows at +-8.89 mm, pitch 2.54 mm, SMD pad 3.5x1.7 mm) taken from the official Raspberry Pi Pico 2 footprint rpi_pico2_smd_th in RPI-PVSA_R3-S1 (MIT, (c) Raspberry Pi Ltd). Module outline 21.00 x 51.00 mm, pad 1 at 1.37 mm from top edge and 1.61 mm from side edge, verified against the Waveshare dimension drawing.")
   (tags "RP2350 Pico castellated")
   (attr smd)
   (fp_text reference "REF**" (at 0 -27.5) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))
