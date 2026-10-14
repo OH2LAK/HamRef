@@ -87,6 +87,7 @@ See the architecture doc for the full reasoning, open questions, and the phased 
 - [x] Requirements and architecture defined
 - [x] Enclosure selected (Fischer AKG 105.26) and display/panel layout locked to it
 - [x] MCU selected (RP2350 / Pico 2)
+- [ ] Proto-PCB v0.1 (bring-up board, see architecture doc)
 - [ ] Breadboard proof of concept (PIO PPS capture + frequency counting, disciplining loop, USB time delivery)
 - [ ] KiCad schematic
 - [ ] PCB layout

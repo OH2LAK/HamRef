@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.8)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.9)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -151,6 +151,71 @@ Virallinen Pico 2 käyttää micro-USB:tä, mutta takapaneeliin halutaan USB-C. 
 
 **Päätös:** suunnitellaan emolevy RP2350-Plus-korttia varten (juotettuna castellated-reunoista tai pistokelistoilla). Pico 2 (micro-USB) ja Zero Mini jäävät varavaihtoehdoiksi.
 
+## GPIO-jako RP2350-Plus-padeille (ehdotus, 2026-10-14)
+
+Periaatteet: UART/I2C-toiminnot on valittu RP2350:n kiinteisiin periferiapinneihin; PIO-tulot (1PPS, 10 MHz) voivat olla mitkä tahansa GPIO:t, joten ne sijoitetaan lähelle toisiaan reitityksen helpottamiseksi. Tulopinneille ei käytetä sisäisiä pull-down-vastuksia (errata E9; pull-up toimii). Pad-numerot ovat Pico-tyylisiä (40 pinniä).
+
+| GPIO | Pad | Toiminto | Huomio |
+|---|---|---|---|
+| GP0 | 1 | UART0 TX → LEA-M8S RXD (pin 4) | NMEA/UBX, 9600 oletus, nostetaan tarvittaessa |
+| GP1 | 2 | UART0 RX ← LEA-M8S TXD (pin 3) | |
+| GP2 | 4 | I2C1 SDA → DAC | DAC omalla väylällä, jotta OLED-liikenne ei kytkeydy EFC-jännitteeseen |
+| GP3 | 5 | I2C1 SCL → DAC | |
+| GP4 | 6 | I2C0 SDA → OLED | 4,7 kΩ pull-upit moduulilla, älä kaksinkertaista |
+| GP5 | 7 | I2C0 SCL → OLED | |
+| GP6 | 9 | **1PPS IN** (LEA-M8S TIMEPULSE, pin 28, puskuroituna) | PIO-aikaleima |
+| GP7 | 10 | **10 MHz IN** (OCXO, puskuroituna/neliöitynä) | PIO-laskuri; GP7 on PWM-slice 3 B-pinni, joten PWM-edge-count on varakeino |
+| GP8 | 11 | 1PPS OUT (MCU:n generoima, valinnainen) | v1:ssä BNC-lähtö tulee suoraan TIMEPULSE-puskurista |
+| GP9 | 12 | LEA-M8S RESET_N (pin 10) | avokollektori/open-drain-tyyliin: ajetaan vain matalaksi |
+| GP10 | 14 | LEA-M8S EXTINT0 (pin 27) | aikamerkki/aiding; varaus |
+| GP11 | 15 | Enkooderi A | RC-suodatus + firmware-debounce |
+| GP12 | 16 | Enkooderi B | |
+| GP13 | 17 | Enkooderin painike | |
+| GP14 | 19 | WS2812-ketju (2 RGB-LEDiä) | 3,3 V:n data → 5 V:n LED: käytä 5 V-tasonsiirtoa (esim. 74AHCT1G125) |
+| GP15–GP20 | 20, 21, 22, 24, 25, 26 | Varalla: erilliset RGB-LEDit (2×3) | käytetään vain jos WS2812 hylätään |
+| GP21 | 27 | OCXO-virran enable (load switch) | OCXO:n lämmitysvirran hallinta |
+| GP22 | 29 | Vapaa (esim. PPS-tulon toinen kopio / varalla) | |
+| GP26 | 31 | ADC0: 5 V -syötön / OCXO-virran mittaus | |
+| GP27 | 32 | ADC1: lämpötila (NTC OCXO:n vieressä) | |
+| GP28 | 34 | ADC2: EFC-jännitteen takaisinluku | |
+
+Käyttö: perustoiminnot vaativat 15 GPIO:ta (GP0–GP14), OCXO-enable ja 3 ADC-kanavaa nostavat 19:ään; varapinnit (GP15–GP20, GP22) kattavat erillisten LEDien vaihtoehdon. GPIO23–25 ja GPIO29 eivät ole padeilla (kortin sisäiseen käyttöön). Antennin avoimen piirin tila (EXTINT1 / ANT_DET_N) luetaan UBX-viesteillä, joten se ei tarvitse MCU-pinniä.
+
+**UF2/BOOTSEL kotelossa:** RP2350-Plus:n BOOT-painike on kortilla (QSPI_SS), ei padeilla. Toteuta firmwareen "reboot to BOOTSEL" -komento USB-CDC:n yli (ja/tai 1200 baudin avaus), ja vie RUN (pad 30) pinniriville resetiä varten.
+
+## Proto-PCB v0.1 (bring-up-levy) — vaatimukset (ehdotus, 2026-10-14)
+
+**Tarkoitus:** validoida sähköinen arkkitehtuuri (LEA-M8S + RP2350-Plus + DAC + OCXO + puskurit + virrat) ennen kotelon mukaan mitoitettua v0.2:ta. Ei yritetä mahduttaa koteloon; helppo mitattavuus ja muunneltavuus ovat tärkeämpiä.
+
+**Rakenne:**
+- 4-kerroslevy (SIG/GND/PWR/SIG) tai 2-kerroslevy yhtenäisellä maatasolla; 4 kerrosta suositellaan RF_IN:n 50 Ω:n johdolle ja OCXO:n puhtaalle maalle. Koko noin 100 × 100 mm.
+- RP2350-Plus: naaraspistokelistat (Plus-M) vaihdettavuuden vuoksi protossa; castellated-juotto v0.2:ssa. USB-C-liitin ulos levyn reunasta.
+- OCXO: pistokepaikka tai sovittimen paikka (OCXO-valinta avoin); EFC-, Vcc-, GND- ja RF-out-signaalit nastarivillä.
+- LEA-M8S: footprint HIM:n mukaan (22,4 × 17,0 mm, 28 pinniä), antennisupervisor (R_BIAS sarjassa V_ANT:iin per HIM 2.4.2–2.4.4), SMA-liitin RF_IN:iin.
+- Puskurit: 1PPS (TIMEPULSE → Schmitt-puskuri → MCU GP6 + BNC 1PPS OUT 50 Ω:n sarjavastuksella); 10 MHz (OCXO → neliöinti/puskuri → MCU GP7 + BNC REF OUT).
+- DAC: paikka sekä 12-bittiselle (MCP4725, nopeat ensikokeet) että 16-bittiselle I2C-DAC:lle + vähäkohinainen referenssi/puskurioperaatiovahvistin EFC:lle (EFC-herkkyys vaihtelee OCXO:ssa tyypillisesti ±0,1…±5 ppm koko jännitealueella → 12 bitin askel olisi suuruusluokkaa 0,05–2,4 ppb, arvio; 16 bittiä antaa varmuutta).
+- Käyttöliittymä: 4-pinninen I2C-header OLEDille (GND/VCC/SCL/SDA, kuten protomoduulissa), enkooderin ja WS2812-ketjun liittimet (sekä varalla erilliset RGB-ledit), RUN-header.
+
+**Virta (arvioita, mitattava):**
+
+| Kuorma | Arvio | Lähde |
+|---|---|---|
+| LEA-M8S (3,0 V) | 22–24 mA seuranta, max 67 mA | datalehti UBX-16010205 |
+| Aktiiviantenni | 10–30 mA tyypillisesti | antennista riippuva |
+| RP2350-Plus + OLED + DAC + puskurit | noin 60–100 mA | arvio |
+| OCXO lämmitys | 300–700 mA | OCXO-luokan tyypillinen, tarkentuu osavalinnassa |
+| OCXO vakiotila | noin 100–250 mA | OCXO-luokan tyypillinen |
+
+Lämmitysvaiheen kokonaisvirta voi ylittää USB 2.0:n oletus-500 mA:n. Ratkaisu protossa: OCXO:n 5 V load switch virrarajalla ja pehmeäkäynnistyksellä (GP21 ohjaa), valinnainen ulkoinen 5 V -syöttö (jakkiliitin/pinnirivi) diodi-OR:illa VBUS:in kanssa, ja virran mittaus (GP26). GNSS:lle oma vähäkohinainen 3,0–3,3 V LDO 5 V:sta (LEA-M8S VCC 2,7–3,6 V), ei RP2350-Plus:n 3V3-rail. V_BCKP (pin 11) tarvitsee varmistuksen (1,4–3,6 V, noin 15 µA) lämpimiä aloituksia varten: superkondensaattori tai nappiparisto.
+
+**Suojaus:** RP2350-Plus:n VBUS-pad (pad 40) on suoraan USB-C:n VBUS eikä kortilla ole sulaketta → emolevylle resetoitava sulake/virtarajoitin (esim. PTC tai load-switch) ja TVS-diodi. Tarkista kortin VBUS-johtimen kestävyys 1 A:lle STEP-/layout-tiedoista ennen kuin OCXO:n virta kulkee sen kautta; vaihtoehtona ulkoinen 5 V -syöttö OCXO:lle.
+
+**Testipisteet:** 5 V, 3V3 (MCU), 3V3_GNSS, VCC_RF, EFC, 1PPS (MCU-puoli ja BNC), 10 MHz (puskurin jälkeen), UART TX/RX, I2C0/I2C1, GND-silmukat oskilloskoopille.
+
+**Rinnalla (ohjelmistoriski, ei vaadi omaa levyä):** breadboard-testi PIO-pohjaiselle 10 MHz -laskennalle ja 1PPS-aikaleimaukselle Pico 2 / RP2350-Plus + LEA-M8S -breakout. Kun toimii, GPIO-jako yllä vahvistetaan ennen levyn tilausta.
+
+**Avoin ennen tilausta:** OCXO-osavalinta (sovittimen nastajako), tuotantonäyttö (protossa riittää header), 10 MHz -lähdön muoto (neliö vs. sini, REF OUT -taso), antennin bias-jännite (V_ANT).
+
 ## Alustava lohkokaavio (tekstinä)
 ```
 Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
@@ -202,7 +267,7 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 - USB-virransyötön mitoitus: mitataan OCXO:n todellinen lämmitysvirtapiikki ja päätetään puskurointi + tarvittava USB-lähteen virrankesto (itsevoimainen hubi / USB-C PD).
 - USB-kellopalvelun toteutustapa v1:ssä: CDC-ACM+host-apuohjelma (nopein) vs. virtuaalinen DCD-PPS vs. USB-Ethernet+oma NTP (valitaan Vaiheessa 6, ei blokkaa PCB-suunnittelua).
 - **USB-C takapaneelissa**: ratkaistu valitsemalla USB-C-korttina Waveshare RP2350-Plus (ks. "USB-C-kortin valinta"). Avoimet tarkistukset: liittimen sijainti ja korkeus takapaneelin aukkoon nähden (liitin työntyy 1,3 mm PCB:n yli, korkeus 3,25 mm), kortin kokonaiskorkeus (alle 22 mm kun juotettuna emolevyyn), 5 V -polun suojaus (ei sulaketta kortilla), laturin lepovirta ilman akkua sekä 4 MB vs. 16 MB flash.
-- GPIO-budjetti (Pico 2 ja RP2350-Plus: 26 käytettävää GPIO:ta padeilla): arvio tarpeesta noin 17–19 (UART 2, I2C 2, enkooderi 3, 2× RGB-ledi 4–6, 1PPS-tulo, 10 MHz -tulo, GNSS RESET/EXTINT) — riittää, mutta ei runsaasti.
+- GPIO-budjetti: ratkaistu ehdotuksella (ks. "GPIO-jako"): 19 GPIO:ta käytössä 26:sta, varapinnit erillisille LEDeille — vahvistetaan breadboard-testissä.
 - PIO-pohjaisen 10 MHz -taajuuslaskennan ja 1PPS-aikaleimauksen toteutus RP2350:llä — validoidaan proof-of-conceptissa (Vaihe 2).
 - NTP-palvelin verkkoon (WiFi/Ethernet) ei kuulu v1:een; jos tarvitaan myöhemmin, vaihtoehdot ovat Pico 2 W tai USB-Ethernet (CDC-NCM).
 - **Tuotantonäytön valinta** (ks. "Tuotantonäyttö (avoin)") sekä OLED-moduulin (0.91" 128x32, ei kiinnitysreikiä prototyypissä) kiinnitystapa etupaneeliin (leikkaus 2 mm:n kansilevyyn — liimaus tai painokehys), enkooderin akselin pituus/holkin läpivienti ja tilaledien sijoittelu — tarkentuu PCB/mekaniikkasuunnittelussa.
