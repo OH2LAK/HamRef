@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.12)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.13)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -22,6 +22,7 @@ LEA-M8S:ssä (Data sheet UBX-16010205 R05, HIM UBX-15030060 R07) on vain yksi ko
 - Kotelo: **Fischer Elektronik AKG 105.26 (tuote AKG1052680ME)** — ekstrudoitu alumiininen minikotelo, 105 × 100,3 × 26 mm, luonnonanodisoitu, integroidut jäähdytysripa-urat, 100 mm:n eurokortille. Ks. "Kotelo ja käyttöliittymä" alla.
 - Näyttö: **~~pieni väri-TFT, SPI, 240x240~~ → 0.91" 128x32 mono-OLED, I2C, SSD1306-luokkaa** — lukittu valinta, ks. "Näyttövalinta" alla.
 - MCU: **~~ESP32-S3~~ → RP2350A, toteutuksena valmis Pico-muotoinen RP2350A-kortti (ensisijaisesti Waveshare RP2350-Plus, USB-C)** — MCU lukittu 2026-10-14, kortin valinta päivitetty 2026-10-14 (ks. "USB-C-kortin valinta"). Koska HamREF:stä halutaan **rakennussarjamainen** (helppo koota itse), käytetään valmista Pico 2 -korttia eikä omaa RP2350-piiriä/flashia/kidettä omalla PCB:llä. Perusteet: PIO-lohkot antavat deterministisen 10 MHz -laskennan ja 1PPS-aikaleimauksen ilman WiFi-häiriötä, natiivi USB (TinyUSB), UF2-päivitys. WiFi ei ole v1:ssä tarpeen, koska USB hoitaa kellopalvelun. Ks. "MCU-valinta" alla.
+- **1PPS OUT (päätös 2026-10-14):** oletuksena OCXO:sta jaettu 1PPS (MCU:n PIO jakaa 10 MHz:n luvulla 10 000 000 ja tahdistaa vaiheen GNSS:n 1PPS:ään hitaalla säädöllä). Näin 1PPS on vaihelukittu REF OUT:in 10 MHz:iin, jitter on OCXO:n tasoa ja signaali jatkuu holdoverissa. Suora TIMEPULSE valitaan jumperilla (proto-PCB:llä) vertailua varten. USB-aikapalvelu käyttää edelleen GNSS:n omaa 1PPS:ää.
 - **Käyttöteho ja kellopalvelu: USB** (ks. alla) — sekä virta että data yhdestä USB-liitännästä.
 
 ## Kotelo ja käyttöliittymä (päivitetty valitun kotelon mukaan)
@@ -218,7 +219,7 @@ Periaatteet: UART/I2C-toiminnot on valittu RP2350:n kiinteisiin periferiapinneih
 | GP5 | 7 | I2C0 SCL → OLED | |
 | GP6 | 9 | **1PPS IN** (LEA-M8S TIMEPULSE, pin 28, puskuroituna) | PIO-aikaleima |
 | GP7 | 10 | **10 MHz IN** (OCXO, puskuroituna/neliöitynä) | PIO-laskuri; GP7 on PWM-slice 3 B-pinni, joten PWM-edge-count on varakeino |
-| GP8 | 11 | 1PPS OUT (MCU:n generoima, valinnainen) | v1:ssä BNC-lähtö tulee suoraan TIMEPULSE-puskurista |
+| GP8 | 11 | **1PPS OUT** (OCXO:sta jaettu, PIO: 10 MHz / 10 000 000, vaihe tahdistetaan GNSS:n 1PPS:ään hitaalla säädöllä) | oletuslähde BNC 1PPS OUT:ille; jumperilla valittavissa suora TIMEPULSE |
 | GP9 | 12 | LEA-M8S RESET_N (pin 10) | avokollektori/open-drain-tyyliin: ajetaan vain matalaksi |
 | GP10 | 14 | LEA-M8S EXTINT0 (pin 27) | aikamerkki/aiding; varaus |
 | GP11 | 15 | Enkooderi A | RC-suodatus + firmware-debounce |
@@ -245,7 +246,7 @@ Käyttö: perustoiminnot vaativat 15 GPIO:ta (GP0–GP14), OCXO-enable ja 3 ADC-
 - RP2350-Plus: naaraspistokelistat (Plus-M) vaihdettavuuden vuoksi protossa; castellated-juotto v0.2:ssa. USB-C-liitin ulos levyn reunasta.
 - OCXO: pistokepaikka tai sovittimen paikka (OCXO-valinta avoin); EFC-, Vcc-, GND- ja RF-out-signaalit nastarivillä.
 - LEA-M8S: footprint HIM:n mukaan (22,4 × 17,0 mm, 28 pinniä), antennisupervisor (R_BIAS sarjassa V_ANT:iin per HIM 2.4.2–2.4.4), SMA-liitin RF_IN:iin.
-- Puskurit: 1PPS (TIMEPULSE → Schmitt-puskuri → MCU GP6 + BNC 1PPS OUT 50 Ω:n sarjavastuksella); 10 MHz (OCXO → neliöinti/puskuri → MCU GP7 + BNC REF OUT).
+- Puskurit: 1PPS IN (TIMEPULSE → Schmitt-puskuri → MCU GP6); 1PPS OUT (BNC, 50 Ω:n sarjavastus): jumperilla valittava lähde, oletuksena OCXO:sta jaettu MCU:n GP8 (PIO), vaihtoehtona suora TIMEPULSE-puskuri vertailumittauksia varten; 10 MHz (OCXO → neliöinti/puskuri → MCU GP7 + BNC REF OUT).
 - DAC: paikka sekä 12-bittiselle (MCP4725, nopeat ensikokeet) että 16-bittiselle I2C-DAC:lle + vähäkohinainen referenssi/puskurioperaatiovahvistin EFC:lle (EFC-herkkyys vaihtelee OCXO:ssa tyypillisesti ±0,1…±5 ppm koko jännitealueella → 12 bitin askel olisi suuruusluokkaa 0,05–2,4 ppb, arvio; 16 bittiä antaa varmuutta).
 - Käyttöliittymä: 4-pinninen I2C-header OLEDille (GND/VCC/SCL/SDA, kuten protomoduulissa), enkooderin ja WS2812-ketjun liittimet (sekä varalla erilliset RGB-ledit), RUN-header.
 
@@ -269,6 +270,29 @@ Lämmitysvaiheen kokonaisvirta voi ylittää USB 2.0:n oletus-500 mA:n. Ratkaisu
 
 **Avoin ennen tilausta:** OCXO-osavalinta (sovittimen nastajako), tuotantonäyttö (protossa riittää header), 10 MHz -lähdön muoto (neliö vs. sini, REF OUT -taso), antennin bias-jännite (V_ANT).
 
+## Synteesivaihtoehto: muut taajuudet kuin 10 MHz (pohdinta, 2026-10-14)
+
+**Tavoite:** tarjota REF OUT:in 10 MHz:n lisäksi muitakin taajuuksia samasta GNSS-lukitusta OCXO:sta (esim. 5 MHz, 1 MHz, 20 MHz, 40 MHz SDR-kelloksi, 100 MHz tai vapaasti valittava taajuus). Kaikki johdetaan OCXO:sta, joten taajuustarkkuus on yhtä hyvä kuin lukitun OCXO:n; vain vaihekohina/jitter voi heikentyä synteesivaiheessa.
+
+| Vaihtoehto | Taajuudet | Vaihekohina / jitter | Vaativuus | Huomio |
+|---|---|---|---|---|
+| 1. Pelkkä jako (74-sarjan jakaja tai PIO) | 10 MHz / n: 5 MHz, 2 MHz, 1 MHz, 100 kHz, 1 kHz, 1 Hz | OCXO:n taso; digitaalinen jako lisää vain vähän | pieni | Ei tuota 20/40/100 MHz:ä eikä muita epäkokonaislukuja |
+| 2. Kellosyntetisaattori **Si5351C** (CLKIN = OCXO 10 MHz) | 2,5 kHz…200 MHz, 8 ulostuloa, 2 PLL:ää; vain kaksi eri taajuutta yli 112,5 MHz | datalehti: period jitter noin 40–70 ps pk-pk (ei RMS-lukua); vaihekohina selvästi OCXO:ta huonompi | pieni (I2C, 3,3 V, noin 27 mA) | CLKIN hyväksyy 10–100 MHz, joten 10 MHz:n OCXO käy suoraan referenssinä (sisäistä kidettä ei tarvita). Hyvä SDR-kellolle ja laskureille, ei laboratoriotason referenssiksi |
+| 3. Fraktio-PLL (esim. ADF4351-luokka) | alkaen noin 35 MHz ylöspäin | selvästi parempi kuin Si5351 (tarkistettava datalehdestä) | keskitaso (SPI, silmukkasuodin, jakajat alle 35 MHz:lle) | Tarkistettava ennen valintaa |
+| 4. DDS | hieno resoluutio, siniaalto | spurit; tarvitsee nopean kellon (OCXO kerrottuna) | korkeampi | Ei ensisijainen |
+
+**Suositus (ehdotus):** pidä **REF OUT 10 MHz** puhtaasti OCXO:sta (jakovahvistin, ei synteesiä polulla) ja tee synteesi omana **AUX-haaranaan**: Si5351C OCXO:n 10 MHz:stä CLKIN:iin, ohjaus I2C:llä, ulostulot omille liittimilleen. Näin synteesi ei heikennä pääreferenssiä, ja sen voi jättää asentamatta kokoonpanosta (rakennussarjan lisävaruste).
+
+**Seuraukset suunnitteluun:**
+- **I2C-osoite:** Si5351C käyttää osoitetta 0x60, joka on sama kuin MCP4725:n oletusosoite → Si5351 I2C0:lle OLEDin (0x3C) kanssa ja DAC omalle I2C1-väylälleen (kuten GPIO-jaossa), jolloin ei törmäystä.
+- **Virta:** Si5351C noin 22–27 mA, vähäinen verrattuna OCXO:n virtaan.
+- **Takapaneeli:** AUX-lähdöille tarvitaan 1–2 lisäliitintä (SMA/BNC). 105 mm:n leveydelle mahtuu SMA + 3 × BNC + USB-C laskennallisesti, tarkka sijoittelu tarkentuu mekaniikkasuunnittelussa.
+- **OCXO:n kuormitus:** OCXO:n HCMOS-lähtö (5 V) puskuroidaan 3,3 V:n logiikalla ennen CLKIN:iä samoin kuin MCU:n tuloon.
+- **Firmware/UI:** taajuuden valinta enkooderi+OLED-valikosta ja USB:n kautta, asetus talteen flashiin; AUX-lähdöt kytketään pois, kun OCXO ei ole lukossa (tai merkitään tilaledillä).
+- **Proto-PCB:** Si5351C-paikka valinnaisena (footprint, voi jäädä asentamatta) ja AUX-lähdöt pinniriville tai SMA:ihin.
+
+**Avoimet kysymykset:** mitkä taajuudet oikeasti tarvitaan (lista), kuinka puhdas signaali (SDR-kello vs. laskuri vs. testimittaus), lähdön taso ja muoto (3,3 V CMOS vs. sini 50 Ω ja suodatus), ja onko Si5351:n vaihekohina riittävä kohdelaitteelle. Erillinen 10→40 MHz -konvertteri (ref10to40) voitaisiin periaatteessa korvata AUX-lähdöllä; vertailu mittaamalla ennen päätöstä.
+
 ## Alustava lohkokaavio (tekstinä)
 ```
 Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
@@ -280,7 +304,7 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
         |                                |--GPIO--> NTP-tilaledi (RGB, väri+vilkku)
         |                                |--I2C --> MCP4725 DAC --EFC--> OCXO 10MHz (5V)
         |                                |                                    |
-        +--------------> BNC 1PPS OUT    |<--taajuusmittaus (PIO/PWM-laskuri)-+
+        +--(JP: TIMEPULSE)--> BNC 1PPS OUT <--(JP: OCXO-jaettu, GP8, PIO)--|  |<--taajuusmittaus (PIO)-+
         |                                |
         |                          USB-C (native, RP2350, 5V):
         |                          - virransyöttö koko laitteelle
@@ -298,6 +322,7 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 - OCXO: 5V, analoginen EFC (esim. Trimble 65256 / IsoTemp 143-141 / CTI OC5SVC25 / Bliley NV47M1008 -tyyppinen, surplus tai vastaava uusi)
 - DAC: MCP4725 (I2C, 12-bit) + RC-silmukkasuodatin, OCXO:n EFC-ohjaukseen
 - 10 MHz (tms.) -puskuri/jakovahvistin, BNC-ulostulo, 50 Ω
+- Valinnainen: Si5351C-kellosyntetisaattori AUX-lähdöille (muut taajuudet kuin 10 MHz), ks. "Synteesivaihtoehto"
 - Näyttö: mono-OLED, I2C, **0.91" 128x32** (SSD1306-ajuri, ~36×12,5mm PCB)
 - Enkooderi: EC11-luokkaa, sisäänrakennetulla painikkeella, etupaneeliin
 - Tilaledit: 2 kpl monivärinen (RGB/bi-color) — GPSDO, NTP
