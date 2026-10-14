@@ -44,7 +44,7 @@ The 22 mm limit also constrains component height on the PCB (OCXO included) — 
 ```
 Active GNSS antenna
         |
-    LEA-M8S  --UART (UBX/NMEA)--> ESP32-S3 <-- encoder (menu/control)
+    LEA-M8S  --UART (UBX/NMEA)--> RP2350 (Pico 2) <-- encoder (menu/control)
         |TIMEPULSE (1PPS)                |
         v                                |--I2C --> 0.91" 128x32 OLED
    (fan out / buffer)                    |--GPIO --> RGB LED "GPSDO"
@@ -52,9 +52,9 @@ Active GNSS antenna
         |                                |--I2C --> DAC --EFC--> OCXO (10 MHz, 5V)
         |                                                              |
         +--------------------------------+                             |
-                                          |<--freq. measurement---------+
+                                          |<--freq. measurement (PIO)---+
                                           |
-                                    USB-C (native, ESP32-S3):
+                                    USB-C (native, RP2350):
                                     - powers the whole device (5V, host link)
                                     - CDC-ACM: PPS/NMEA data -> host helper -> chrony SHM/PPS
                                     - also carries parameter configuration
@@ -70,9 +70,9 @@ Key hardware decisions so far:
 
 | Item | Decision | Notes |
 |---|---|---|
-| GNSS module | u-blox LEA-M8S | Fixed — parts already on hand. |
+| GNSS module | u-blox LEA-M8S | Fixed — parts already on hand. Footprint and pinout are shared with LEA-M8T. |
 | Antenna | Active, external | Antenna supervisor + R_BIAS per u-blox HIM. |
-| MCU | ESP32-S3 | Native USB, WiFi, enough peripherals for PPS capture + DAC + display. |
+| MCU | RP2350 (Raspberry Pi Pico 2) | PIO blocks give deterministic 10 MHz counting and 1PPS timestamping without WiFi interrupt jitter; native USB (TinyUSB); UF2 firmware updates. No WiFi in v1 (Pico 2 W is an option later). |
 | Oscillator | 5 V OCXO, analog EFC | e.g. Trimble 65256 / IsoTemp 143-141 / CTI OC5SVC25 / Bliley NV47M1008 class part — physical height inside the 22 mm case is still open, see architecture doc. |
 | Enclosure | Fischer Elektronik AKG 105.26 (AKG1052680ME) | 105 × 100.3 × 26 mm extruded aluminum, 100 mm eurocard. |
 | Display | 0.91" 128x32 mono OLED, I2C | SSD1306-class, ~36×12.5 mm PCB — fits the 22 mm panel height with margin; 0.96" 128x64 modules do not. |
@@ -86,7 +86,8 @@ See the architecture doc for the full reasoning, open questions, and the phased 
 
 - [x] Requirements and architecture defined
 - [x] Enclosure selected (Fischer AKG 105.26) and display/panel layout locked to it
-- [ ] Breadboard proof of concept (PPS capture, disciplining loop, USB time delivery)
+- [x] MCU selected (RP2350 / Pico 2)
+- [ ] Breadboard proof of concept (PIO PPS capture + frequency counting, disciplining loop, USB time delivery)
 - [ ] KiCad schematic
 - [ ] PCB layout
 - [ ] Enclosure machining (panel cutouts)
@@ -99,7 +100,7 @@ See the architecture doc for the full reasoning, open questions, and the phased 
 
 ```
 /hardware       KiCad project (schematic, PCB, BOM)
-/firmware       ESP32-S3 firmware
+/firmware       RP2350 firmware (Pico SDK)
 /enclosure      Panel cutout drawings for the Fischer AKG 105.26
 /docs           Architecture notes, test results, photos
 ```

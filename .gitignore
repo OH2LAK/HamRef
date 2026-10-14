@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# KiCad
+*-backups/
+*.kicad_prl
+fp-info-cache
+*.bak
+*.lck
+_autosave-*
+
+# Firmware build output
+firmware/build/
+*.uf2
+*.elf
+
+# Local-only files (not part of the repo)
+docs/archive/
+docs/datasheets/mxp600-brochure-eng.pdf
