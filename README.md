@@ -2,10 +2,15 @@
 
 A small GNSS-disciplined 10 MHz frequency reference and precision time server for the amateur radio shack — built around the u-blox LEA-M8S GNSS module.
 
-> **Status: early architecture / pre-prototype.** No firmware or PCB yet. This README documents the design as currently planned so the repo has a real starting point; sections below are marked `TODO` where work hasn't started.
+> **Status: early architecture / pre-prototype.** Proto-1 schematic and PCB (v0.1) are generated and routed, not yet built or tested; no firmware yet. This README documents the design as currently planned so the repo has a real starting point; sections below are marked `TODO` where work hasn't started.
 
 <p align="center">
   <img width="600" alt="HamREF mockup" src="https://github.com/user-attachments/assets/82779c23-fe5e-4b1a-90e0-4775c3bd64c9" />
+</p>
+
+<p align="center">
+  <img width="600" alt="HamREF proto-1 PCB (3D view from KiCad)" src="docs/images/HamREF%20proto-1%20PCB.png" /><br>
+  <em>Proto-1 bring-up board (v0.1): 4-layer, 100 × 100 mm, 3D view from KiCad. Design files in <a href="hardware/proto-v0.1/"><code>hardware/proto-v0.1/</code></a>.</em>
 </p>
 
 ## What this is
