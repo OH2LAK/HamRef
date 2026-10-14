@@ -12,7 +12,7 @@ A small GNSS-disciplined 10 MHz frequency reference and precision time server fo
 
 HamREF provides two things a well-equipped station needs and usually has to buy separately:
 
-- A **10 MHz reference output** (or any other, programmable) (BNC, 50 Ω) to lock transceivers, synthesizers, and test equipment.
+- A **10 MHz reference output** (BNC, 50 Ω) to lock transceivers, synthesizers, and test equipment, plus a **programmable AUX output** for other frequencies (e.g. 25 MHz, 27 MHz for satellite LNBs, 40 MHz for a Pluto SDR, or an arbitrary frequency).
 - A **1 PPS timing output** which can be used to lock and synck devices to the world-standard one pulse per second.
 - A **precision time source for the shack computer**, disciplined by GNSS, accurate enough for FT8 and other digital modes.
 
@@ -35,7 +35,7 @@ The 26 mm case height (≈22 mm usable panel height) ruled out the originally pl
 | Panel | Contents |
 |---|---|
 | Front | 0.91" 128x32 OLED (status), 2 multicolor LEDs (GPSDO, NTP), rotary encoder (menu/control) |
-| Rear | SMA (GNSS antenna), BNC (1PPS OUT), BNC (REF OUT), USB-C (host + 5V power) |
+| Rear | SMA (GNSS antenna), BNC (1PPS OUT), BNC (REF OUT 10 MHz), BNC (AUX OUT, programmable), USB-C (host + 5V power) |
 
 The 22 mm limit also constrains component height on the PCB (OCXO included) — still an open item, see the architecture doc.
 
@@ -77,7 +77,7 @@ Key hardware decisions so far:
 | Enclosure | Fischer Elektronik AKG 105.26 (AKG1052680ME) | 105 × 100.3 × 26 mm extruded aluminum, 100 mm eurocard. |
 | Display | 0.91" 128x32 mono OLED, I2C | SSD1306-class, 38 × 12 mm PCB (active area 22.4 × 5.6 mm) — fits the 22 mm panel height with margin; 0.96" 128x64 modules do not. |
 | Front panel | OLED + 2 multicolor LEDs (GPSDO, NTP) + rotary encoder | EC11-class encoder confirmed to fit the 22 mm panel height. LED color/blink pattern encodes state (firmware TBD). |
-| Rear panel | SMA (GNSS antenna), BNC (1PPS OUT), BNC (REF OUT), USB-C (host + 5V power) | All connectors on the back; layout across the 105 mm width still to be confirmed at PCB stage. |
+| Rear panel | SMA (GNSS antenna), BNC (1PPS OUT), BNC (REF OUT 10 MHz), BNC (AUX OUT, programmable), USB-C (host + 5V power) | All connectors on the back; layout across the 105 mm width still to be confirmed at PCB stage. |
 | Power + host link | USB-C | Powers the device (5V); CDC-ACM carries PPS/NMEA to a host-side helper feeding chrony (SHM/PPS refclock), and doubles as the configuration interface alongside the encoder/OLED menu. |
 
 See the architecture doc for the full reasoning, open questions, and the phased project plan.

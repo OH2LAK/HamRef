@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.13)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.14)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -23,6 +23,7 @@ LEA-M8S:ssä (Data sheet UBX-16010205 R05, HIM UBX-15030060 R07) on vain yksi ko
 - Näyttö: **~~pieni väri-TFT, SPI, 240x240~~ → 0.91" 128x32 mono-OLED, I2C, SSD1306-luokkaa** — lukittu valinta, ks. "Näyttövalinta" alla.
 - MCU: **~~ESP32-S3~~ → RP2350A, toteutuksena valmis Pico-muotoinen RP2350A-kortti (ensisijaisesti Waveshare RP2350-Plus, USB-C)** — MCU lukittu 2026-10-14, kortin valinta päivitetty 2026-10-14 (ks. "USB-C-kortin valinta"). Koska HamREF:stä halutaan **rakennussarjamainen** (helppo koota itse), käytetään valmista Pico 2 -korttia eikä omaa RP2350-piiriä/flashia/kidettä omalla PCB:llä. Perusteet: PIO-lohkot antavat deterministisen 10 MHz -laskennan ja 1PPS-aikaleimauksen ilman WiFi-häiriötä, natiivi USB (TinyUSB), UF2-päivitys. WiFi ei ole v1:ssä tarpeen, koska USB hoitaa kellopalvelun. Ks. "MCU-valinta" alla.
 - **1PPS OUT (päätös 2026-10-14):** oletuksena OCXO:sta jaettu 1PPS (MCU:n PIO jakaa 10 MHz:n luvulla 10 000 000 ja tahdistaa vaiheen GNSS:n 1PPS:ään hitaalla säädöllä). Näin 1PPS on vaihelukittu REF OUT:in 10 MHz:iin, jitter on OCXO:n tasoa ja signaali jatkuu holdoverissa. Suora TIMEPULSE valitaan jumperilla (proto-PCB:llä) vertailua varten. USB-aikapalvelu käyttää edelleen GNSS:n omaa 1PPS:ää.
+- **Lähdöt (päätös 2026-10-14):** 1PPS OUT, REF OUT 10 MHz ja ohjelmoitava AUX OUT (Si5351C OCXO:n 10 MHz:stä; esim. 25 MHz, 27 MHz LNB, 40 MHz Pluto, muu mielivaltainen). Ks. "Synteesi ja AUX-lähtö".
 - **Käyttöteho ja kellopalvelu: USB** (ks. alla) — sekä virta että data yhdestä USB-liitännästä.
 
 ## Kotelo ja käyttöliittymä (päivitetty valitun kotelon mukaan)
@@ -34,7 +35,7 @@ Kotelo on lukittu: **Fischer Elektronik AKG 105.26** (AKG1052680ME) — kaksi pu
 - **Enkooderi mahtuu kuitenkin** — tarkistettu EC11-luokan enkooderin mitat: runko n. 11,7 × 12–13 mm, korkeus vain 4,5–8,5 mm mallista riippuen, paneelin läpivientiholkki ø7 mm ([Farnell EC11 datasheet](https://www.farnell.com/datasheets/1837001.pdf)). Tämä mahtuu reilusti 22 mm:n sisäkorkeuteen, joten alkuperäinen "ei mahdu" -päätös oli liian varovainen. → **Etupaneeliin tulee EC11-tyyppinen enkooderi** (usein sisäänrakennetulla painikkeella) OLED-valikon selailuun ja parametrien säätöön.
 - **Tilan ilmaisu: kaksi monivärista (RGB/bi-color) tilaledia**: **GPSDO**-ledi (väri+vilkku/kiinteä kertoo OCXO:n kuritustilan, esim. vihreä kiinteä = disciplined, keltainen vilkkuva = acquiring/hakee lukkoa, punainen = vika) ja **NTP**-ledi (vastaavasti ajanjakelun tilan, esim. vihreä kiinteä = tarjoaa validia aikaa, keltainen vilkkuva = odottaa GNSS-fixiä, punainen = ei USB-host-yhteyttä/vika).
 - **Parametrien hallinta: etupaneelin enkooderi + OLED-valikko, ja/tai USB:n kautta.**
-- **Takapaneelin liittimet**: SMA (GNSS-antenni), BNC × 2 (1PPS OUT, REF OUT), USB-C (host computer + virta, 5V). 1PPS saa oman fyysisen BNC-lähtönsä ulkoisia laitteita (taajuuslaskuri, oskilloskooppi ym.) varten USB-kellopalvelun rinnalle.
+- **Takapaneelin liittimet**: SMA (GNSS-antenni), BNC × 3 (1PPS OUT, REF OUT 10 MHz, AUX OUT ohjelmoitava), USB-C (host computer + virta, 5V). 1PPS saa oman fyysisen BNC-lähtönsä ulkoisia laitteita (taajuuslaskuri, oskilloskooppi ym.) varten USB-kellopalvelun rinnalle.
 - 26 mm sisäkorkeus rajaa yhä **kortin komponenttikorkeuden molemmin puolin** — OCXO-valinnassa pitää tarkistaa fyysinen korkeus tämän kotelon suhteen, ei vain sähköiset ominaisuudet. Tämä on avoin riski, ks. alla.
 
 ## Näyttövalinta: 0.91" 128x32 OLED (lukittu)
@@ -270,9 +271,29 @@ Lämmitysvaiheen kokonaisvirta voi ylittää USB 2.0:n oletus-500 mA:n. Ratkaisu
 
 **Avoin ennen tilausta:** OCXO-osavalinta (sovittimen nastajako), tuotantonäyttö (protossa riittää header), 10 MHz -lähdön muoto (neliö vs. sini, REF OUT -taso), antennin bias-jännite (V_ANT).
 
-## Synteesivaihtoehto: muut taajuudet kuin 10 MHz (pohdinta, 2026-10-14)
+## Synteesi ja AUX-lähtö: ohjelmoitava lähtötaajuus (päätös 2026-10-14)
 
-**Tavoite:** tarjota REF OUT:in 10 MHz:n lisäksi muitakin taajuuksia samasta GNSS-lukitusta OCXO:sta (esim. 5 MHz, 1 MHz, 20 MHz, 40 MHz SDR-kelloksi, 100 MHz tai vapaasti valittava taajuus). Kaikki johdetaan OCXO:sta, joten taajuustarkkuus on yhtä hyvä kuin lukitun OCXO:n; vain vaihekohina/jitter voi heikentyä synteesivaiheessa.
+**Päätös (Erik):** HamREFin perusominaisuudet ovat **1PPS OUT**, **REF OUT 10 MHz** ja **ohjelmoitava AUX OUT**. AUX-lähdön tyypillisiä taajuuksia: 25 MHz, 27 MHz (satelliitti-LNB:n referenssi), 40 MHz (Pluto SDR) tai muu mielivaltainen taajuus. Tämä korvaa aiemman "valinnainen"-linjauksen: Si5351C on mukana perusrakenteessa.
+
+**Toteutus:** Si5351C, jonka CLKIN on OCXO:n 10 MHz. Se on lukittu GNSS:ään OCXO:n kautta, joten AUX-taajuuden tarkkuus on lukitun OCXO:n tarkkuus; vain vaihekohina/jitter heikkenee synteesissä. REF OUT 10 MHz pidetään puhtaasti OCXO:sta omalla puskurillaan, jottei synteesi heikennä pääreferenssiä.
+
+**Esimerkkitaajuudet kokonaislukusuhteilla** (Si5351C:n PLL-kerroin 15…90, VCO 600…900 MHz, jakaja kokonaisluku → matalin jitter; tarkista jakajarajat datalehdestä toteutusvaiheessa):
+
+| Taajuus | Käyttö | PLL-kerroin ×10 MHz | VCO | Jakaja |
+|---|---|---|---|---|
+| 25 MHz | referenssi (esim. LNB, SDR) | 75 | 750 MHz | 30 |
+| 27 MHz | satelliitti-LNB | 81 | 810 MHz | 30 |
+| 40 MHz | Pluto SDR | 80 | 800 MHz | 20 |
+
+Muut taajuudet toteutetaan murtokertoimilla (fraktio-N); tarkkuus on käytännössä sub-ppb, mutta jitter ja spurit kasvavat verrattuna kokonaislukusuhteisiin. Si5351C:ssa on kaksi PLL:ää, joten kaksi eri, toisiinsa liittymätöntä taajuutta voi olla yhtä aikaa tuotannossa; yli 112,5 MHz:n taajuuksia vain kaksi eri.
+
+**Tarkistettavaa ennen suunnittelun lukitsemista:**
+- **Lähtötaso ja -muoto:** Si5351C antaa 3,3 V:n CMOS-neliön (VDDO valittavissa). LNB-referenssi, Pluto ja muut kohdelaitteet saattavat odottaa siniaaltoa tai tiettyä tasoa, DC-estoa tai bias-T:tä (LNB:n referenssi kulkee yleensä koaksiaalissa). Vahvistetaan kohdelaitteiden speksistä; tarvittaessa alipäästösuodin ja tasosovitus AUX-lähdön perään.
+- **Vaihekohina:** Si5351:n period jitter on datalehden mukaan 40–70 ps pk-pk ja vaihekohina selvästi OCXO:ta huonompi. Riittääkö se Plutolle (40 MHz) ja LNB:lle, selviää mittaamalla; jos ei, vaihtoehtona on fraktio-PLL (ADF4351-luokka, tarkistettava) tai pelkkä jako, kun taajuus on kokonaislukuosuus.
+- **Lukon ilmaisu:** AUX kytketään pois tai merkitään tilaledillä, kun OCXO ei ole lukossa.
+- **Erillinen 10→40 MHz -konvertteri (ref10to40):** AUX OUT 40 MHz:llä voisi periaatteessa korvata sen; vertailu mittaamalla ennen päätöstä.
+
+**Vaihtoehtojen vertailu (alkuperäinen pohdinta):**
 
 | Vaihtoehto | Taajuudet | Vaihekohina / jitter | Vaativuus | Huomio |
 |---|---|---|---|---|
@@ -281,17 +302,15 @@ Lämmitysvaiheen kokonaisvirta voi ylittää USB 2.0:n oletus-500 mA:n. Ratkaisu
 | 3. Fraktio-PLL (esim. ADF4351-luokka) | alkaen noin 35 MHz ylöspäin | selvästi parempi kuin Si5351 (tarkistettava datalehdestä) | keskitaso (SPI, silmukkasuodin, jakajat alle 35 MHz:lle) | Tarkistettava ennen valintaa |
 | 4. DDS | hieno resoluutio, siniaalto | spurit; tarvitsee nopean kellon (OCXO kerrottuna) | korkeampi | Ei ensisijainen |
 
-**Suositus (ehdotus):** pidä **REF OUT 10 MHz** puhtaasti OCXO:sta (jakovahvistin, ei synteesiä polulla) ja tee synteesi omana **AUX-haaranaan**: Si5351C OCXO:n 10 MHz:stä CLKIN:iin, ohjaus I2C:llä, ulostulot omille liittimilleen. Näin synteesi ei heikennä pääreferenssiä, ja sen voi jättää asentamatta kokoonpanosta (rakennussarjan lisävaruste).
+**Valittu:** vaihtoehto 2 (Si5351C, CLKIN = OCXO 10 MHz) AUX-haarana; REF OUT 10 MHz pysyy puhtaana OCXO-polkuna.
 
 **Seuraukset suunnitteluun:**
 - **I2C-osoite:** Si5351C käyttää osoitetta 0x60, joka on sama kuin MCP4725:n oletusosoite → Si5351 I2C0:lle OLEDin (0x3C) kanssa ja DAC omalle I2C1-väylälleen (kuten GPIO-jaossa), jolloin ei törmäystä.
 - **Virta:** Si5351C noin 22–27 mA, vähäinen verrattuna OCXO:n virtaan.
-- **Takapaneeli:** AUX-lähdöille tarvitaan 1–2 lisäliitintä (SMA/BNC). 105 mm:n leveydelle mahtuu SMA + 3 × BNC + USB-C laskennallisesti, tarkka sijoittelu tarkentuu mekaniikkasuunnittelussa.
+- **Takapaneeli:** AUX OUT saa oman BNC-liittimensä. 105 mm:n leveydelle mahtuu SMA + 3 × BNC + USB-C laskennallisesti, tarkka sijoittelu tarkentuu mekaniikkasuunnittelussa.
 - **OCXO:n kuormitus:** OCXO:n HCMOS-lähtö (5 V) puskuroidaan 3,3 V:n logiikalla ennen CLKIN:iä samoin kuin MCU:n tuloon.
 - **Firmware/UI:** taajuuden valinta enkooderi+OLED-valikosta ja USB:n kautta, asetus talteen flashiin; AUX-lähdöt kytketään pois, kun OCXO ei ole lukossa (tai merkitään tilaledillä).
-- **Proto-PCB:** Si5351C-paikka valinnaisena (footprint, voi jäädä asentamatta) ja AUX-lähdöt pinniriville tai SMA:ihin.
-
-**Avoimet kysymykset:** mitkä taajuudet oikeasti tarvitaan (lista), kuinka puhdas signaali (SDR-kello vs. laskuri vs. testimittaus), lähdön taso ja muoto (3,3 V CMOS vs. sini 50 Ω ja suodatus), ja onko Si5351:n vaihekohina riittävä kohdelaitteelle. Erillinen 10→40 MHz -konvertteri (ref10to40) voitaisiin periaatteessa korvata AUX-lähdöllä; vertailu mittaamalla ennen päätöstä.
+- **Proto-PCB:** Si5351C asennettuna (perusominaisuus), AUX-lähdöt BNC:lle sekä mittapisteet ja pinnirivi lisälähdöille.
 
 ## Alustava lohkokaavio (tekstinä)
 ```
@@ -312,7 +331,9 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
         |                          - myös parametrikonfigurointi (rinnakkain enkooderin kanssa)
         |                          (myöh. vaihtoehto: virtuaalinen DCD tai USB-Ethernet+oma NTP)
         |
-        +--------- puskuri/jakovahvistin <-- OCXO ---> BNC REF OUT (10 MHz tms., 50 ohm)
+        +--------- puskuri/jakovahvistin <-- OCXO ---> BNC REF OUT (10 MHz, 50 ohm)
+                                         |
+                                         +--> Si5351C (CLKIN, I2C0 <- MCU) --> BNC AUX OUT (ohjelmoitava: 25/27/40 MHz tms.)
 ```
 
 ## Karkea BOM-kategorialista (tarkennetaan Vaiheessa 2)
@@ -322,11 +343,11 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 - OCXO: 5V, analoginen EFC (esim. Trimble 65256 / IsoTemp 143-141 / CTI OC5SVC25 / Bliley NV47M1008 -tyyppinen, surplus tai vastaava uusi)
 - DAC: MCP4725 (I2C, 12-bit) + RC-silmukkasuodatin, OCXO:n EFC-ohjaukseen
 - 10 MHz (tms.) -puskuri/jakovahvistin, BNC-ulostulo, 50 Ω
-- Valinnainen: Si5351C-kellosyntetisaattori AUX-lähdöille (muut taajuudet kuin 10 MHz), ks. "Synteesivaihtoehto"
+- Si5351C-kellosyntetisaattori AUX-lähdölle (ohjelmoitava taajuus, perusominaisuus), ks. "Synteesi ja AUX-lähtö"
 - Näyttö: mono-OLED, I2C, **0.91" 128x32** (SSD1306-ajuri, ~36×12,5mm PCB)
 - Enkooderi: EC11-luokkaa, sisäänrakennetulla painikkeella, etupaneeliin
 - Tilaledit: 2 kpl monivärinen (RGB/bi-color) — GPSDO, NTP
-- Liittimet (kaikki takapaneelissa): SMA (GNSS-antenni), BNC (1PPS OUT), BNC (REF OUT), USB-C (host + virta 5V)
+- Liittimet (kaikki takapaneelissa): SMA (GNSS-antenni), BNC (1PPS OUT), BNC (REF OUT 10 MHz), BNC (AUX OUT, ohjelmoitava), USB-C (host + virta 5V)
 - Suurehko elektrolyyttikondensaattori OCXO:n lämmitysvirtapiikin puskurointiin USB-syötössä
 - Kotelo: **Fischer Elektronik AKG 105.26 / AKG1052680ME** (105 × 100,3 × 26 mm, luonnonanodisoitu alumiini, 100 mm eurokortille)
 
@@ -335,7 +356,7 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 2. **Proof-of-concept penkillä**: Pico 2 -kehityskortti, paljas LEA-M8S pienellä carrier-piirillä (tai u-blox EVK-M8), MCP4725-breakout, valittu OCXO, 0.91" OLED-breakout, USB-CDC+ntp-shm-tyylinen PC-apuohjelma. Tavoite: validoida PIO-pohjainen PPS-kaappaus ja taajuuslaskenta, disciplining-algoritmi, USB-kellopalvelu ja virransyötön riittävyys ennen omaa piirilevyä.
 3. **Kytkentäkaavio (KiCad)** — LEA-M8S HIM:n minimisuunnittelu + antennisupervisor aktiiviantennille, Pico 2 -kortti, DAC, OCXO, OLED+tilaledit+enkooderi, USB-C, liittimet. Piirilevyn ääriviiva AKG 105.26:n sisämittojen mukaan (100 mm eurokortti, komponenttikorkeus ≤22 mm).
 4. **PCB-layout** — RF-osuudet (antenni, 10 MHz -ulostulo) 50 Ω kontrolloidulla impedanssilla, HIM:n EMI-suositukset I/O-linjoilla, OCXO pois lämpölähteiden läheltä (HIM 2.5), kaikki liittimet reunalle takapaneelin kohdalle.
-5. **Kotelo** — Fischer AKG1052680ME: etupaneeliin OLED-aukko, 2 tilaledin reiät ja enkooderin ø7 mm reikä; takapaneeliin SMA, 2× BNC ja USB-C -aukot.
+5. **Kotelo** — Fischer AKG1052680ME: etupaneeliin OLED-aukko, 2 tilaledin reiät ja enkooderin ø7 mm reikä; takapaneeliin SMA, 3× BNC (1PPS, REF 10 MHz, AUX) ja USB-C -aukot.
 6. **Firmware** — UBX-parsinta, PIO-pohjainen PPS-kaappaus/taajuuslaskenta ja disciplining-silmukka, OLED-status-UI + enkooderivalikko, tilaledien ohjaus, USB-CDC-kellopalvelu ja -konfigurointi.
 7. **Kalibrointi ja verifiointi** — 10 MHz verrataan referenssitaajuuslaskuriin/toiseen GPSDO:hon, NTP/PPS-tarkkuus tarkistetaan (chronyc tracking), pitkän ajan holdover-testi, OCXO:n lämmitysvirtapiikin mittaus USB-syötöstä.
 
@@ -350,5 +371,5 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 - NTP-palvelin verkkoon (WiFi/Ethernet) ei kuulu v1:een; jos tarvitaan myöhemmin, vaihtoehdot ovat Pico 2 W tai USB-Ethernet (CDC-NCM).
 - **Tuotantonäytön valinta** (ks. "Tuotantonäyttö (avoin)") sekä OLED-moduulin (0.91" 128x32, ei kiinnitysreikiä prototyypissä) kiinnitystapa etupaneeliin (leikkaus 2 mm:n kansilevyyn — liimaus tai painokehys), enkooderin akselin pituus/holkin läpivienti ja tilaledien sijoittelu — tarkentuu PCB/mekaniikkasuunnittelussa.
 - 100 mm eurokortin todellinen käytettävä leveys AKG 105.26 -profiilin sisällä (kiskourat vievät osan 105 mm:stä) — mitattava/varmistettava ennen PCB-ääriviivan lyömistä lukkoon.
-- Takapaneelin liitinasettelu (SMA + 2×BNC + USB-C 105 mm:n leveydellä) — mahtuu laskennallisesti hyvin, mutta tarkka sijoittelu tarkentuu mekaniikkasuunnittelussa.
+- Takapaneelin liitinasettelu (SMA + 3×BNC + USB-C 105 mm:n leveydellä) — mahtuu laskennallisesti hyvin, mutta tarkka sijoittelu tarkentuu mekaniikkasuunnittelussa.
 - GPSDO- ja NTP-tilaledien tarkka väri-/vilkkulogiikka määritellään firmwaren suunnittelussa.
