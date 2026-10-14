@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "HamREF")(type "KiCad")(uri "${KIPRJMOD}/hamref.pretty")(options "")(descr "HamREF project footprints"))
+)

@@ -1,0 +1,79 @@
+(kicad_sch (version 20230121) (generator hamref-gen)
+
+  (uuid 9cfb6f8b-2020-43c0-8114-395e7a4f1c23)
+
+  (paper "A3")
+  (lib_symbols)
+
+  (sheet (at 30 30) (size 60 15)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0))
+    (uuid d5c6493d-de64-49f1-ac3e-886842cf8834)
+    (property "Sheetname" "Power" (at 30 29.0 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Sheetfile" "power.kicad_sch" (at 30 46.5 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (instances
+      (project "hamref_proto_v0_1"
+        (path "/9cfb6f8b-2020-43c0-8114-395e7a4f1c23" (page "2"))
+      )
+    )
+  )
+
+  (sheet (at 30 60) (size 60 15)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0))
+    (uuid 33301fd2-1181-41ad-be3b-c67f27dee526)
+    (property "Sheetname" "GNSS" (at 30 59.0 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Sheetfile" "gnss.kicad_sch" (at 30 76.5 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (instances
+      (project "hamref_proto_v0_1"
+        (path "/9cfb6f8b-2020-43c0-8114-395e7a4f1c23" (page "3"))
+      )
+    )
+  )
+
+  (sheet (at 30 90) (size 60 15)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0))
+    (uuid 58d55098-ad8f-4563-b3e4-383f16b94578)
+    (property "Sheetname" "Clock" (at 30 89.0 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Sheetfile" "clock.kicad_sch" (at 30 106.5 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (instances
+      (project "hamref_proto_v0_1"
+        (path "/9cfb6f8b-2020-43c0-8114-395e7a4f1c23" (page "4"))
+      )
+    )
+  )
+
+  (sheet (at 30 120) (size 60 15)
+    (stroke (width 0.1524) (type solid))
+    (fill (color 0 0 0 0.0))
+    (uuid c1f43b33-cf45-4db4-b354-cc8ae14996da)
+    (property "Sheetname" "MCU_UI" (at 30 119.0 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Sheetfile" "mcu_ui.kicad_sch" (at 30 136.5 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (instances
+      (project "hamref_proto_v0_1"
+        (path "/9cfb6f8b-2020-43c0-8114-395e7a4f1c23" (page "5"))
+      )
+    )
+  )
+
+  (sheet_instances
+    (path "/" (page "1"))
+  )
+)

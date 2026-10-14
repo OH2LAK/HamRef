@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.14)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.15)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -311,6 +311,14 @@ Muut taajuudet toteutetaan murtokertoimilla (fraktio-N); tarkkuus on käytännö
 - **OCXO:n kuormitus:** OCXO:n HCMOS-lähtö (5 V) puskuroidaan 3,3 V:n logiikalla ennen CLKIN:iä samoin kuin MCU:n tuloon.
 - **Firmware/UI:** taajuuden valinta enkooderi+OLED-valikosta ja USB:n kautta, asetus talteen flashiin; AUX-lähdöt kytketään pois, kun OCXO ei ole lukossa (tai merkitään tilaledillä).
 - **Proto-PCB:** Si5351C asennettuna (perusominaisuus), AUX-lähdöt BNC:lle sekä mittapisteet ja pinnirivi lisälähdöille.
+
+## Proto-PCB v0.1: kaaviot generoitu (2026-10-14)
+
+KiCad 7 -projekti on kansiossa `hardware/proto-v0.1/` (hierarkia Power / GNSS / Clock / MCU_UI, 113 osaa, 85 nettiä). Kaaviosuunnitelma osa- ja nettitaulukoineen: `docs/hardware/proto-v0.1-schematic-plan.md`. Generaattori ja tarkistus: `hardware/tools/` (`build.py`, `erclite.py`, `gendoc.py`). Nettilista latautuu ja ERC-lite on puhdas; KiCadin oma ERC ja visuaalinen siistiminen tehdään Macilla.
+
+Muutokset GPIO-jakoon: GP16 = OCXO_FLT (TPS2065C:n vikalippu). Spare: GP17–GP20 (J SPARE).
+
+Seuraavaksi: RP2350-Plus-jalanjälki STEP-mittojen mukaan, OCXO-jalanjälki kappaleesta mitaten, KiCadin ERC, sitten layout.
 
 ## Alustava lohkokaavio (tekstinä)
 ```
