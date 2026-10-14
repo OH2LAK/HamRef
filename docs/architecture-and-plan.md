@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.9)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.10)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -84,6 +84,27 @@ Nämä ovat kaikki 5V analogisella EFC-piikillä varustettuja, eli MCU→I2C-DAC
 Vaihtoehto (jos halutaan välttää analoginen DAC+silmukkasuodatin kokonaan): **SiTime-sarjan digitaalisesti viritettävät MEMS-OCXO:t** (esim. SiT5711-tyyppinen, 3.3V, I2C-ohjaus) tarjoavat erittäin hyvän ±5–8 ppb -stabiiliuden ja pienen koon (9×7mm) ilman analogista EFC-silmukkaa — MCU kirjoittaa taajuuskorjauksen suoraan I2C:n yli. Huom: SiT5711 on merkitty "Not recommended for new designs" (SiTime ohjaa SiT5801:een), ja SiTime-osat yleensä hankitaan jakelijan kautta (Mouser/Digikey/SiTimeDirect) eivätkä ole yhtä helposti/halvasti saatavilla pienissä erissä kuin surplus-OCXO:t eBaysta. Prototyyppivaiheeseen suosittelen aloittamaan halvemmalla ja paremmin dokumentoidulla analogisella 5V OCXO:lla; SiTime-reitti kannattaa harkita vasta jos päädytään pieneen sarjaan asti.
 
 **Huomio virransyötöstä (liittyy USB-kysymykseen alla):** pienetkin OCXO:t vetävät lämmitysvaiheessa (ensimmäiset ~3–5 min kylmästä käynnistyksestä) merkittävästi enemmän virtaa (tyypillisesti 300–700 mA) kuin stabiloituneena (~100–200 mA). Tämä pitää ottaa huomioon USB-virtabudjetissa ja mahdollisesti puskuroida isolla elektrolyyttikondensaattorilla, ettei isäntäkoneen USB-portin virtarajoitus laukea käynnistyksessä.
+
+## OCXO-ehdokkaat (selvitys 2026-10-14)
+
+Kriteerit: 10 MHz, 5 V syöttö, analoginen EFC, korkeus selvästi alle 22 mm, hyvä saatavuus. Hinnat ja varastot ovat 2026-10-14 hakutuloksista ja jälleenmyyjien sivuilta; vahvista ennen tilausta. Virrat on laskettu datalehtien tehoarvoista (P/5 V), eli ne ovat arvioita.
+
+| # | Osa | Koko (mm) | EFC | Teho / virta (5 V, arvio) | Stabiilisuus | Hinta ja saatavuus |
+|---|---|---|---|---|---|---|
+| 1 | **Abracon AOCJY1A-10.000MHZ** (DIP-14, CMOS; "-SW" = siniaalto) | 20,8 × 13,2 × 8,2 | 0…Vdd, ±5 ppm, 10 kΩ | käynnistys 2,0 W (~0,4 A), vakio 1,0 W (~0,2 A) | ±50 ppb (0…50 °C); vanheneminen ±500 ppb/v | Future Electronics 89–95 $/kpl (MOQ 5 pakkaus, varasto 0, tehtaan toimitusaika 27 vk); Farnell IE 87,38 € ex VAT (26 vk); eräs jälleenmyyjä ilmoittaa 1 586 kpl varastossa (89 $) |
+| 2 | **Abracon AOCJY-…A (5 V -versio)** | 25,4 × 22,1 × 12,7 | 0…Vdd, ±0,7 ppm, 10 kΩ | käynnistys 3,6 W (~0,72 A), vakio 1,4 W (~0,28 A) | ±5 ppb (0…50 °C), parempi vaihekohina | Hintaa ja varastoa ei löytynyt (Abracon: ei verkkokaupan varastossa, myynti Digi-Keyn kautta); 5 V:n tilauskoodi vahvistettava |
+| 3 | **CTS 1188** (SMD/muu, 5 V = koodi D) | 25,8 × 25,8 × 12,7 | 0…Vcc, ±0,7 ppm min | 1,2 W vakio (taulukon tulkinta epävarma) | ±10…100 ppb valinnan mukaan | Hintaa ei löytynyt; tilauskoodi 1188-xxGEDHV-10M000-tyyppinen |
+| 4 | Surplus: Bliley NV47M1008 (10 MHz, 5 V, neliö, EFC) | ei vahvistettu | EFC | surplus-OCXO-luokka | ei vahvistettu | eBay 11–24 $ + noin 20 $ postit (useita listauksia, osa loppunut) |
+| 5 | Surplus: Trimble 65256 | ei vahvistettu | EFC (VL-pinni) | surplus-OCXO-luokka | ei vahvistettu | eBay noin 24 $ perillä (vanha foorumitieto) |
+
+**Havaintoja:**
+- Uudet osat 1–3 mahtuvat 22 mm:n sisäkorkeuteen helposti (8,2–12,7 mm). Surplus-osien (4–5) korkeus on vielä mittaamatta.
+- **Virta:** AOCJY1A:n käynnistysvirta on noin 0,4 A (osa 2:lla noin 0,72 A), mikä yhdessä muun elektroniikan (noin 0,1–0,15 A) kanssa on joko hieman yli tai selvästi yli USB 2.0:n 500 mA:n. OCXO:n load switch virrarajalla ja pehmeäkäynnistyksellä on siis tarpeen, ja ulkoinen 5 V -syöttö kannattaa varata protoon.
+- **EFC:** ±5 ppm:n pull-alue (AOCJY1A) vaatii hienojakoisen DAC:n: 12 bitillä askel olisi noin 2,4 ppb, 16 bitillä noin 0,15 ppb. Tämä tukee 16-bittistä DAC-paikkaa proto-PCB:llä. ±0,7 ppm:n osilla (2, 3) 12 bitin askel olisi noin 0,34 ppb.
+- Vaihekohina (10 MHz, osa 1): −90 dBc/Hz @ 10 Hz, −120 @ 100 Hz, −145 @ 1 kHz, −150 @ 10 kHz.
+- **Hinta:** uusien osien hinta (noin 90 €) on suuri rakennussarjaan; surplus on selvästi halvempaa, mutta saatavuus ja mitat vaihtelevat.
+
+**Suositus:** protoon AOCJY1A (pieni, hyvin dokumentoitu, uusi, DIP-14-pistokesovitin helppo) ja rinnalle yksi surplus-OCXO halvempana vertailuna. Lopullinen valinta tehdään kun toimitusaika (26–27 vk) ja sarjan hinta on selvillä; osan 2 (5 V -versio) hinta ja saatavuus tarkistettava Digi-Keyltä.
 
 ## USB: virta + kellopalvelu samasta liitännästä — kyllä, toimiva ratkaisu
 
