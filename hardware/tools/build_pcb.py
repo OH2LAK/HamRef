@@ -346,7 +346,7 @@ seg(a, c, 0.25, pcbnew.F_Cu, '3V3')
 MODEL_VAR = os.environ.get('MODEL_VAR', 'KICAD10_3DMODEL_DIR')
 MODEL_EXT = os.environ.get('MODEL_EXT', 'step')   # official libs ship .step (master) and .wrl; use MODEL_EXT=wrl if models are missing
 def wrl_box(path, boxes):
-    """boxes: list of (cx, cy, z0, w, h, d, (r,g,b)) in mm. VRML units are 0.1 inch; VRML +y = footprint -y (board up)."""
+    """boxes: list of (cx, cy, z0, w, h, d, (r,g,b)) in mm. VRML units are 0.1 inch."""
     u = 1 / 2.54
     out = ['#VRML V2.0 utf8']
     for cx, cy, z0, w, h, d, col in boxes:
@@ -358,8 +358,8 @@ os.makedirs(os.path.join(PROJ, 'hamref.3dshapes'), exist_ok=True)
 SH = os.path.join(PROJ, 'hamref.3dshapes')
 wrl_box(os.path.join(SH, 'OCXO_OSC5A2B02_EST.wrl'), [(0, 0, 0.5, 25.4, 25.4, 10.2, (0.75, 0.75, 0.78))])
 wrl_box(os.path.join(SH, 'RP2350-Plus.wrl'), [(0, 0, 0.5, 21.0, 51.0, 1.0, (0.05, 0.35, 0.15)),
-                                              (0, 23.5, 1.5, 9.0, 7.4, 3.2, (0.8, 0.8, 0.82)),
-                                              (0, -6.0, 1.5, 12.0, 12.0, 1.0, (0.1, 0.1, 0.1))])
+                                              (0, -23.5, 1.5, 9.0, 7.4, 3.2, (0.8, 0.8, 0.82)),
+                                              (0, 6.0, 1.5, 12.0, 12.0, 1.0, (0.1, 0.1, 0.1))])
 def add_model(ref, name):
     m = pcbnew.FP_3DMODEL(); m.m_Filename = '${KIPRJMOD}/hamref.3dshapes/' + name
     m.m_Scale = pcbnew.VECTOR3D(1, 1, 1); m.m_Rotation = pcbnew.VECTOR3D(0, 0, 0); m.m_Offset = pcbnew.VECTOR3D(0, 0, 0)
@@ -380,8 +380,7 @@ for fp in fps.values():
             except Exception: pass
 
 
-txt('HamREF proto v0.1', 64, 92.2, 1.2)
-txt('REAR: SMA ANT / BNC REF / 1PPS / AUX', 40, 2.2, 0.9)
+txt('HamREF proto v0.1', 24, 73.8, 1.2)
 txt('OCXO OSC5A2B02', 46, 41.4, 0.8); txt('FOOTPRINT ESTIMATED', 46, 43.2, 0.8); txt('- VERIFY BEFORE ORDER -', 46, 45.0, 0.8)
 
 # logo (HamREF by OH2LAK + satellite), vectorised from the enclosure mockup by make_logo.py
