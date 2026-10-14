@@ -53,6 +53,29 @@ The 22 mm limit also constrains component height on the PCB (OCXO included) — 
 
 The GNSS module's 1PPS (TIMEPULSE) disciplines the OCXO through the MCU: the RP2350 measures the 10 MHz against the PPS with PIO and steers the EFC through the DAC. REF OUT (10 MHz) comes from the OCXO itself, 1PPS OUT from the GNSS TIMEPULSE, and AUX OUT is a programmable output (Si5351C clocked from the OCXO).
 
+**What is the USB-C port, in plain words?** It is a normal USB-C connector (USB 2.0 only, no Power Delivery, so always 5 V) wired straight to the RP2350's own USB controller. One cable does two jobs: it powers the whole device and it carries data. The data side is a **virtual serial port over USB** (class CDC-ACM): the computer sees an ordinary serial port (`COMx` on Windows, `/dev/ttyACM0` on Linux, `/dev/cu.usbmodem…` on macOS) and needs no special driver. Over that port the device sends the GNSS text sentences and PPS timing data to a small helper program on the computer, which feeds chrony; the computer can also send configuration commands back.
+
+| Acronym | Meaning |
+|---|---|
+| GNSS | Global Navigation Satellite System: GPS, Galileo, GLONASS, BeiDou |
+| 1PPS / PPS | One Pulse Per Second: a pulse aligned to the start of each UTC second |
+| TIMEPULSE | u-blox name for the LEA-M8S's programmable timing-pulse output (here set to 1PPS) |
+| UART | Universal Asynchronous Receiver/Transmitter: the simple serial link between LEA-M8S and RP2350 |
+| NMEA | Text sentences (`$GPGGA`, `$GPRMC` …) in which GNSS receivers report time, position and satellites |
+| UBX | u-blox's own binary protocol, used to configure the LEA-M8S |
+| USB VBUS | The 5 V power line of a USB cable |
+| CDC-ACM | USB Communications Device Class, Abstract Control Model: the standard way to make a USB device look like a serial port |
+| PD | USB Power Delivery: negotiation of voltages above 5 V (not used here) |
+| I2C | Two-wire bus used for the OLED, the DAC and the Si5351C |
+| GPIO | General-purpose input/output pin (drives the status LEDs, reads the encoder) |
+| PIO | Programmable I/O: the RP2350's small hardware state machines that count the 10 MHz and timestamp the PPS without CPU jitter |
+| OCXO | Oven-Controlled Crystal Oscillator: a crystal kept at constant temperature, the source of the 10 MHz |
+| EFC | Electronic Frequency Control: the analog voltage input that fine-tunes the OCXO's frequency |
+| DAC | Digital-to-Analog Converter: turns the MCU's number into the EFC voltage |
+| SHM | Shared Memory: one of chrony's reference-clock interfaces, where the host helper hands over the timestamps |
+| chrony | The time-sync daemon on Linux/macOS that disciplines the computer's clock (an NTP implementation) |
+| NTP | Network Time Protocol |
+
 Key hardware decisions so far:
 
 | Item | Decision | Notes |

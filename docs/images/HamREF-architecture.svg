@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" font-family="DejaVu Sans, Verdana, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 840" width="1200" height="840" font-family="DejaVu Sans, Verdana, Arial, sans-serif">
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b4a5a"/></marker><marker id="as" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3b4a5a"/></marker></defs>
 <style>.t{font-size:15px;font-weight:700;fill:#1d2733}.s{font-size:13px;fill:#33414f}.l{font-size:12.5px;fill:#33414f;font-style:italic}</style>
-<rect width="1200" height="800" fill="#ffffff"/>
+<rect width="1200" height="840" fill="#ffffff"/>
 <rect x="40" y="40" width="210" height="50" rx="9" fill="#f4f6f8" stroke="#3b4a5a" stroke-width="2"/>
 <text x="145.0" y="70.0" text-anchor="middle" class="t">Active GNSS antenna</text>
 <rect x="40" y="140" width="210" height="70" rx="9" fill="#f4f6f8" stroke="#3b4a5a" stroke-width="2"/>
@@ -74,14 +74,18 @@
 <text x="835.0" y="667.0" text-anchor="middle" class="t">AUX OUT</text>
 <text x="835.0" y="687.0" text-anchor="middle" class="s">BNC, programmable</text>
 <path d="M835,580 L835,640" fill="none" stroke="#3b4a5a" stroke-width="2" marker-end="url(#a)"/>
-<rect x="400" y="520" width="330" height="130" rx="9" fill="#e8f5e9" stroke="#2f7a3a" stroke-width="2"/>
-<text x="565.0" y="546" text-anchor="middle" class="t">USB-C (native, RP2350)</text>
-<text x="416" y="578" class="s">&#8226; powers the whole device (5 V)</text>
-<text x="416" y="600" class="s">&#8226; CDC-ACM: PPS/NMEA data to host</text>
-<text x="416" y="622" class="s">&#8226; also carries parameter configuration</text>
+<rect x="400" y="520" width="330" height="190" rx="9" fill="#e8f5e9" stroke="#2f7a3a" stroke-width="2"/>
+<text x="565.0" y="546" text-anchor="middle" class="t">USB-C port</text>
+<text x="565.0" y="566" text-anchor="middle" class="s">native USB 2.0 of the RP2350 (no PD)</text>
+<text x="416" y="596" class="s">&#8226; Power in: 5 V from the host (USB VBUS)</text>
+<text x="416" y="616" class="s">&#8226; Data: a virtual serial port over USB</text>
+<text x="430" y="636" class="s">(CDC-ACM), shows up as COMx or</text>
+<text x="430" y="656" class="s">/dev/ttyACM0, no extra driver needed</text>
+<text x="416" y="676" class="s">&#8226; To host: NMEA text + PPS timing data</text>
+<text x="416" y="696" class="s">&#8226; From host: parameter configuration</text>
 <path d="M565,440 L565,520" fill="none" stroke="#3b4a5a" stroke-width="2" marker-end="url(#a)" marker-start="url(#as)"/>
-<rect x="400" y="700" width="330" height="64" rx="9" fill="#f4f6f8" stroke="#3b4a5a" stroke-width="2"/>
-<text x="565.0" y="729.0" text-anchor="middle" class="t">Host computer</text>
-<text x="565.0" y="749.0" text-anchor="middle" class="s">helper &#8594; chrony SHM/PPS refclock</text>
-<path d="M565,650 L565,700" fill="none" stroke="#3b4a5a" stroke-width="2" marker-end="url(#a)" marker-start="url(#as)"/>
+<rect x="400" y="756" width="330" height="64" rx="9" fill="#f4f6f8" stroke="#3b4a5a" stroke-width="2"/>
+<text x="565.0" y="785.0" text-anchor="middle" class="t">Host computer</text>
+<text x="565.0" y="805.0" text-anchor="middle" class="s">helper &#8594; chrony SHM/PPS refclock</text>
+<path d="M565,710 L565,756" fill="none" stroke="#3b4a5a" stroke-width="2" marker-end="url(#a)" marker-start="url(#as)"/>
 </svg>
