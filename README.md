@@ -75,7 +75,7 @@ Key hardware decisions so far:
 | MCU | RP2350A on a ready-made Raspberry Pi Pico 2 board | Ready-made board keeps HamREF easy to build as a kit. PIO blocks give deterministic 10 MHz counting and 1PPS timestamping without WiFi interrupt jitter; native USB (TinyUSB); UF2 firmware updates. No WiFi in v1 (Pico 2 W is an option later). |
 | Oscillator | 5 V OCXO, analog EFC | e.g. Trimble 65256 / IsoTemp 143-141 / CTI OC5SVC25 / Bliley NV47M1008 class part — physical height inside the 22 mm case is still open, see architecture doc. |
 | Enclosure | Fischer Elektronik AKG 105.26 (AKG1052680ME) | 105 × 100.3 × 26 mm extruded aluminum, 100 mm eurocard. |
-| Display | 0.91" 128x32 mono OLED, I2C | SSD1306-class, ~36×12.5 mm PCB — fits the 22 mm panel height with margin; 0.96" 128x64 modules do not. |
+| Display | 0.91" 128x32 mono OLED, I2C | SSD1306-class, 38 × 12 mm PCB (active area 22.4 × 5.6 mm) — fits the 22 mm panel height with margin; 0.96" 128x64 modules do not. |
 | Front panel | OLED + 2 multicolor LEDs (GPSDO, NTP) + rotary encoder | EC11-class encoder confirmed to fit the 22 mm panel height. LED color/blink pattern encodes state (firmware TBD). |
 | Rear panel | SMA (GNSS antenna), BNC (1PPS OUT), BNC (REF OUT), USB-C (host + 5V power) | All connectors on the back; layout across the 105 mm width still to be confirmed at PCB stage. |
 | Power + host link | USB-C | Powers the device (5V); CDC-ACM carries PPS/NMEA to a host-side helper feeding chrony (SHM/PPS refclock), and doubles as the configuration interface alongside the encoder/OLED menu. |

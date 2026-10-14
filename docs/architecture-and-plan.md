@@ -1,4 +1,4 @@
-# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.5)
+# HamREF – arkkitehtuuri ja projektisuunnitelma (v0.6)
 
 ## Tavoite
 Pieni tuote radioamatöörin asemalle, joka tarjoaa:
@@ -52,6 +52,15 @@ Konseptikuvat (mittasuhteet oikein datalehden mukaan):
 - Etu-/takapaneeli-mockup kotelon mitoilla: `https://claude.ai/artifact/WYU3QZwbzuxi1QUfCSpZFV`
 - OLED-tekstivariantit: `https://claude.ai/artifact/8gpZwQhh3ehsbZSFcEQK6K`
 - Aiempi, jo vanhentunut yleismockup (värinäyttö+enkooderi, ei sidottu tiettyyn koteloon): `https://claude.ai/artifact/QKyhnXYtYmfK1mJ8LYiwAB`
+
+### Prototyypin OLED-moduuli (tilattu 2026-10-14)
+Prototyyppeihin tilattu 5 kpl 0.91" 128×32 I2C OLED -moduuleja (Yeluft, valkoinen, nastat esijuotettu). Tiedot myyntisivun kuvista (`docs/datasheets/OLED_0.91_I2C_proto/`; kuvat ovat myyjän, ei virallinen datalehti — varmista mitat kaliipereilla kun moduulit saapuvat):
+- **Mitat:** piirilevy **38,00 × 12,00 mm** (levyn korkeus 11,50 mm); lasi 30,00 mm pitkä ja päättyy 3,00 mm:n päähän levyn oikeasta reunasta; **aktiivinen alue 22,38 × 5,58 mm**, alkaa n. 7,1 mm levyn vasemmasta reunasta (8,52 mm oikeasta reunasta) ja n. 2,43 mm levyn yläreunasta. FPC-taittoalue oikeassa päässä.
+- **Ei kiinnitysreikiä** — kiinnitys etupaneeliin liimaamalla/kehyksellä/pidikkeellä, ei ruuveilla.
+- **Liitäntä:** 4 reikää/juotospadia 2,54 mm:n välein vasemmassa päässä, järjestys **GND (neliöpadi), VCC, SCL, SDA**. Nastalista on esijuotettu; poistettavissa tai korvattavissa johdoilla.
+- **Elektroniikka:** SSD1306-luokan ohjain (ruudulla "091OLED"), moduulilla XC6206 3,3 V:n LDO → **VCC 3,3–5 V**, I2C-pull-upit 4,7 kΩ moduulin 3,3 V:iin (SCL, SDA), reset-RC + diodi. Käytä Pico 2:n 3V3(OUT):a.
+- **I2C-osoite:** ei näy kuvissa (todennäköisesti 0x3C) — varmista I2C-skannauksella.
+- Etupaneelin ikkuna: mitoitetaan aktiivisen alueen mukaan (22,38 × 5,58 mm) + toleranssi/reunus; tarkka aukko ja kiinnitys piirretään kun moduulit on mitattu.
 
 ## OCXO/TCXO-suositus
 
@@ -168,7 +177,7 @@ Aktiivinen GNSS-antenni (SMA, V_ANT + R_BIAS, antennisupervisor)
 - GPIO-budjetti Pico 2:lla: 26 käytettävää GPIO:ta; arvio tarpeesta noin 17–19 (UART 2, I2C 2, enkooderi 3, 2× RGB-ledi 4–6, 1PPS-tulo, 10 MHz -tulo, GNSS RESET/EXTINT) — riittää, mutta ei runsaasti.
 - PIO-pohjaisen 10 MHz -taajuuslaskennan ja 1PPS-aikaleimauksen toteutus RP2350:llä — validoidaan proof-of-conceptissa (Vaihe 2).
 - NTP-palvelin verkkoon (WiFi/Ethernet) ei kuulu v1:een; jos tarvitaan myöhemmin, vaihtoehdot ovat Pico 2 W tai USB-Ethernet (CDC-NCM).
-- OLED-moduulin (0.91" 128x32) tarkka kiinnitystapa etupaneeliin (leikkaus 2 mm:n kansilevyyn — liimaus, pienet ruuvit vai painokehys), enkooderin akselin pituus/holkin läpivienti ja tilaledien sijoittelu — tarkentuu PCB/mekaniikkasuunnittelussa.
+- OLED-moduulin (0.91" 128x32, ei kiinnitysreikiä) kiinnitystapa etupaneeliin (leikkaus 2 mm:n kansilevyyn — liimaus tai painokehys), enkooderin akselin pituus/holkin läpivienti ja tilaledien sijoittelu — tarkentuu PCB/mekaniikkasuunnittelussa.
 - 100 mm eurokortin todellinen käytettävä leveys AKG 105.26 -profiilin sisällä (kiskourat vievät osan 105 mm:stä) — mitattava/varmistettava ennen PCB-ääriviivan lyömistä lukkoon.
 - Takapaneelin liitinasettelu (SMA + 2×BNC + USB-C 105 mm:n leveydellä) — mahtuu laskennallisesti hyvin, mutta tarkka sijoittelu tarkentuu mekaniikkasuunnittelussa.
 - GPSDO- ja NTP-tilaledien tarkka väri-/vilkkulogiikka määritellään firmwaren suunnittelussa.
