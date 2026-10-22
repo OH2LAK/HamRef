@@ -1,0 +1,46 @@
+; HamREF: count 10 MHz OCXO cycles, latch the free-running count on each PPS edge.
+; Author: Erik, OH2LAK
+;
+; in_base = PPS pin; pin 0 = PPS, pin 1 = 10 MHz.  `jmp pin` tests PPS.
+; X is a free-running 32-bit down counter (one decrement per 10 MHz rising
+; edge, never reset, so no cycles are lost). On the first 10 MHz edge that
+; sees PPS high after it was low, X is pushed to the RX FIFO. The CPU takes
+; the difference of consecutive values (mod 2^32) = cycles per second.
+; PPS is sampled right after a 10 MHz edge -> 100 ns quantisation.
+; Y = 0: PPS was low (armed), Y = ~0: edge already reported.
+
+.program hamref_gate
+
+.wrap_target
+top:
+    wait 0 pin 1
+    wait 1 pin 1
+    jmp x-- chk
+chk:
+    jmp pin hi
+    mov y, null
+    jmp top
+hi:
+    jmp !y edge
+    jmp top
+edge:
+    mov isr, x
+    push noblock
+    mov y, ~null
+.wrap
+
+% c-sdk {
+#include "hardware/clocks.h"
+static inline void hamref_gate_init(PIO pio, uint sm, uint offset, uint pps_pin)
+{
+    pio_sm_config c = hamref_gate_program_get_default_config(offset);
+    sm_config_set_in_pins(&c, pps_pin);
+    sm_config_set_jmp_pin(&c, pps_pin);
+    sm_config_set_clkdiv(&c, 1.0f);
+    pio_gpio_init(pio, pps_pin);
+    pio_gpio_init(pio, pps_pin + 1);
+    pio_sm_set_consecutive_pindirs(pio, sm, pps_pin, 2, false);
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

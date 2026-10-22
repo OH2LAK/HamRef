@@ -2,7 +2,7 @@
 
 A small GNSS-disciplined 10 MHz frequency reference and precision time server for the amateur radio shack — built around the u-blox LEA-M8S GNSS module.
 
-> **Status: early architecture / pre-prototype.** Proto-1 schematic and PCB (v0.1) are generated and routed, not yet built or tested; no firmware yet. This README documents the design as currently planned so the repo has a real starting point; sections below are marked `TODO` where work hasn't started.
+> **Status: early architecture / pre-prototype.** Proto-1 schematic and PCB (v0.1) are generated and routed, not yet built or tested; a firmware proof of concept (PIO counter + disciplining loop, host-simulated, not yet run on hardware) is in [`firmware/`](firmware/). This README documents the design as currently planned so the repo has a real starting point; sections below are marked `TODO` where work hasn't started.
 
 <p align="center">
   <img width="600" alt="HamREF mockup" src="https://github.com/user-attachments/assets/82779c23-fe5e-4b1a-90e0-4775c3bd64c9" />
@@ -29,7 +29,7 @@ The LEA-M8S can output a configurable timepulse from 0.25 Hz to 10 MHz directly,
 
 HamREF instead uses the classic GPSDO approach: the LEA-M8S's single TIMEPULSE output is configured as **1PPS**, and that one pulse-per-second reference is used by the MCU to discipline a separate free-running OCXO via a DAC-driven EFC loop with a long time constant. The 10 MHz output comes from the OCXO itself — far lower phase noise, plus holdover if satellite lock drops. The same 1PPS/NMEA data feeds the time service to the host computer.
 
-Full rationale and the architecture decision log: [`docs/architecture-and-plan.md`](docs/architecture-and-plan.md) `TODO: copy in from the project doc`.
+Full rationale and the architecture decision log: [`docs/architecture-and-plan.md`](docs/architecture-and-plan.md) (in Finnish).
 
 ## Enclosure
 
@@ -102,23 +102,22 @@ See the architecture doc for the full reasoning, open questions, and the phased 
 - [ ] KiCad schematic
 - [ ] PCB layout
 - [ ] Enclosure machining (panel cutouts)
-- [ ] Firmware
+- [x] Firmware proof of concept (PIO gate counter, disciplining loop, host simulation) - see [`firmware/`](firmware/)
+- [ ] Firmware on real hardware (calibration, OLED/menu, GNSS configuration, host helper)
 - [ ] Calibration and verification against a reference
 
 ## Repository structure
 
-`TODO` — not yet populated. Planned layout:
-
 ```
-/hardware       KiCad project (schematic, PCB, BOM)
-/firmware       RP2350 firmware (Pico SDK)
-/enclosure      Panel cutout drawings for the Fischer AKG 105.26
-/docs           Architecture notes, test results, photos
+hardware/proto-v0.1/   KiCad project (schematic, PCB) for the proto-1 board
+hardware/tools/        Python scripts that generate the schematic/PCB
+firmware/              RP2350 firmware (Pico SDK) and host simulation
+docs/                  Architecture notes, hardware plans, images
 ```
 
 ## Building it yourself
 
-`TODO` — no build instructions yet; this section will cover bill of materials, toolchain, flashing, and bring-up once the proof-of-concept stage is complete.
+Firmware: see [`firmware/README.md`](firmware/README.md) (Pico SDK, CMake, UF2). The disciplining loop can be tried without hardware with the host simulation described there. Hardware: open `hardware/proto-v0.1/` in KiCad; the pre-order checklist is in [`docs/hardware/board-finishing-checklist.md`](docs/hardware/board-finishing-checklist.md). A bill of materials and bring-up guide will follow once the board is built.
 
 ## Hardware reference documents
 
@@ -130,7 +129,7 @@ Design decisions are based on:
 
 ## License
 
-`TODO` — pick a license (e.g. MIT/CERN-OHL-S for hardware, MIT/GPL for firmware) before the first public commit.
+Not chosen yet (candidates: CERN-OHL-S for hardware, MIT or GPL for firmware, CC BY-SA for docs). Until a license is added, all rights are reserved.
 
 ## Authors
 
